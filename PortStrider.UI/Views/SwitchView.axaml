@@ -1,0 +1,149 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PortStrider.UI.ViewModels"
+             xmlns:conv="using:PortStrider.UI.Converters"
+             xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="PortStrider.UI.Views.SwitchView"
+             x:DataType="vm:SwitchViewModel">
+
+    <Grid RowDefinitions="Auto,*" RowSpacing="16">
+        <Border Classes="pageHero">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="13">
+                <Border Width="38" Height="38" CornerRadius="9" Background="{StaticResource AccentDimBrush}">
+                    <materialIcons:MaterialIcon Kind="LanConnect" Width="20" Height="20"
+                                                Foreground="{StaticResource AccentBrush}"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                    <TextBlock Text="SWITCH PORT DISCOVERY" Classes="kicker" Foreground="{StaticResource AccentBrush}"/>
+                    <TextBlock Text="Decode LLDP, CDP and EDP advertisements for switch, port, VLAN, PoE and PHY details."
+                               FontSize="12" Classes="muted" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding Status}" Margin="0,4,0,0" FontFamily="{StaticResource Mono}"
+                               FontSize="11" Foreground="{StaticResource AccentBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="LISTEN TIMEOUT" Classes="kicker"/>
+                        <NumericUpDown Value="{Binding TimeoutSeconds}" Minimum="8" Maximum="90"
+                                       Width="110" IsEnabled="{Binding !IsListening}"/>
+                    </StackPanel>
+                    <Button Classes="danger" Command="{Binding StopCommand}" IsVisible="{Binding IsListening}"
+                            VerticalAlignment="Bottom">STOP</Button>
+                    <Button Classes="primary" Command="{Binding ListenCommand}" VerticalAlignment="Bottom">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{x:Static conv:BoolAndMultiConverter.Instance}">
+                                <Binding Path="Session.HasAdapter"/>
+                                <Binding Path="!IsListening"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <materialIcons:MaterialIcon Kind="Radar" Width="16" Height="16"/>
+                            <TextBlock Text="START LISTENING" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1">
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="16">
+                <Border Grid.Row="0" Grid.Column="0" Classes="card">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="SYSTEM NAME" Classes="kicker"/>
+                        <TextBlock Text="{Binding Info.SwitchName}" Classes="metric" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding Info.ChassisId}" Classes="muted" FontFamily="{StaticResource Mono}" FontSize="12"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Row="0" Grid.Column="1" Classes="card">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="PORT" Classes="kicker"/>
+                        <TextBlock Text="{Binding Info.PortId}" Classes="metric" Foreground="#FFC44D" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding Info.PortDescription}" Classes="muted" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Row="1" Grid.Column="0" Classes="card">
+                    <Grid ColumnDefinitions="*,*">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="VLAN" Classes="kicker"/>
+                            <TextBlock Text="{Binding Info.VlanId}" Classes="metric"/>
+                            <TextBlock Classes="muted" Text="{Binding Info.NativeVlan, StringFormat='Native {0}'}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="6">
+                            <TextBlock Text="VOICE VLAN" Classes="kicker"/>
+                            <TextBlock Text="{Binding Info.VoiceVlan}" Classes="metric" Foreground="#80CBC4"/>
+                            <TextBlock Classes="muted" Text="LLDP-MED policy / CDP VoIP" FontSize="11"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Border Grid.Row="1" Grid.Column="1" Classes="card">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="MANAGEMENT IP" Classes="kicker"/>
+                        <TextBlock Text="{Binding Info.ManagementIp}" Classes="metric" FontFamily="{StaticResource Mono}"/>
+                        <TextBlock Text="{Binding Info.Capabilities}" Classes="muted" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Row="2" Grid.Column="0" Classes="card">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="HARDWARE" Classes="kicker"/>
+                        <TextBlock Text="{Binding Info.Model}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding Info.MauType}" Classes="muted"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Row="2" Grid.Column="1" Classes="card">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="POWER (PoE)" Classes="kicker"/>
+                        <TextBlock Text="{Binding Info.Poe}" Classes="metric" FontSize="16" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding Info.Duplex}" Classes="muted"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Classes="card">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="FLASH PORT" Classes="kicker" Foreground="#2EE6D6"/>
+                            <TextBlock Text="Cycle this NIC's link so the matching switch-port LED blinks — find the port in the closet."
+                                       Classes="muted" FontSize="12" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding FlashStatus}" FontFamily="{StaticResource Mono}" FontSize="11" Foreground="#80CBC4" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                            <StackPanel Spacing="2" Width="170">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="FAST" Classes="kicker"/>
+                                    <TextBlock Grid.Column="1" Text="SLOW" Classes="kicker"/>
+                                </Grid>
+                                <Slider Minimum="1.5" Maximum="10" TickFrequency="0.5" IsSnapToTickEnabled="True"
+                                        Value="{Binding FlashPeriodSeconds}" IsEnabled="{Binding !IsFlashing}"/>
+                                <TextBlock Text="{Binding FlashPeriodSeconds, StringFormat='{}{0:0.0} s per blink'}" Classes="muted" FontSize="11" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                            <Button Classes="primary" Command="{Binding ToggleFlashCommand}" VerticalAlignment="Center"
+                                    ToolTip.Tip="Requires Linux, iproute2 and a selected adapter">
+                                <Button.IsEnabled>
+                                    <MultiBinding Converter="{x:Static conv:BoolAndMultiConverter.Instance}">
+                                        <Binding Path="FlashSupported"/>
+                                        <Binding Path="Session.HasAdapter"/>
+                                    </MultiBinding>
+                                </Button.IsEnabled>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <materialIcons:MaterialIcon Kind="LightbulbOn" Width="16" Height="16"/>
+                                    <TextBlock Text="{Binding FlashButtonLabel}" FontWeight="Bold"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Border Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Classes="card">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="SOFTWARE / DETAILS" Classes="kicker"/>
+                        <TextBlock Text="{Binding Info.SoftwareVersion}" Classes="muted" TextWrapping="Wrap"/>
+                        <ItemsControl ItemsSource="{Binding Info.Details}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" FontSize="12" Foreground="#80CBC4" Margin="0,2,0,0"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

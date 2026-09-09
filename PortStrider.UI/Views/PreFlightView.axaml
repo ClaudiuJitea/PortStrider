@@ -1,0 +1,81 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PortStrider.UI.ViewModels"
+             xmlns:models="using:PortStrider.Core.Models"
+             xmlns:conv="using:PortStrider.UI.Converters"
+             xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="PortStrider.UI.Views.PreFlightView"
+             x:DataType="vm:PreFlightViewModel">
+
+    <Grid RowDefinitions="Auto,*" RowSpacing="16">
+        <Border Classes="pageHero">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="13">
+                <Border Width="38" Height="38" CornerRadius="9" Background="{StaticResource AccentDimBrush}">
+                    <materialIcons:MaterialIcon Kind="ShieldCheck" Width="20" Height="20"
+                                                Foreground="{StaticResource AccentBrush}"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                    <TextBlock Text="PRE-FLIGHT READINESS" Classes="kicker" Foreground="{StaticResource AccentBrush}"/>
+                    <TextBlock Text="Verify capture drivers, diagnostics tools and privileges before starting field work."
+                               Classes="muted" FontSize="12" TextWrapping="Wrap"/>
+                    <TextBlock Margin="0,5,0,0" FontFamily="{StaticResource Mono}" FontSize="11"
+                               Text="{Binding PrivilegeStatus}" Foreground="{StaticResource AccentBrush}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding Log}" Classes="muted" FontSize="11" TextWrapping="Wrap"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button Classes="ghost" Command="{Binding RepairAllCommand}" IsEnabled="{Binding !IsBusy}">
+                        <StackPanel Orientation="Horizontal" Spacing="7">
+                            <materialIcons:MaterialIcon Kind="WrenchCog" Width="16" Height="16"/>
+                            <TextBlock Text="REPAIR MISSING"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="primary" Command="{Binding ScanCommand}" IsEnabled="{Binding !IsBusy}">
+                        <StackPanel Orientation="Horizontal" Spacing="7">
+                            <materialIcons:MaterialIcon Kind="Refresh" Width="16" Height="16"/>
+                            <TextBlock Text="RUN CHECKS"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <ScrollViewer>
+                <ItemsControl ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:DependencyStatus">
+                            <Border Classes="card" Margin="0,0,0,8" Padding="14,12">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                    <Border Width="34" Height="34" CornerRadius="17" Margin="0,0,12,0"
+                                            Background="#10161F" VerticalAlignment="Center">
+                                        <Ellipse Width="11" Height="11" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                 Fill="{Binding IsReady, Converter={x:Static conv:BoolToBrushConverter.Ready}}"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Spacing="3">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Details}" Classes="muted" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding FixHint}" FontSize="11" Foreground="{StaticResource DimBrush}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="2" Classes="ghost" Content="REPAIR"
+                                            Command="{Binding $parent[ItemsControl].((vm:PreFlightViewModel)DataContext).RepairCommand}"
+                                            CommandParameter="{Binding}"
+                                            IsVisible="{Binding CanAutoFix}"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+            <StackPanel IsVisible="{Binding !HasItems}" HorizontalAlignment="Center"
+                        VerticalAlignment="Center" Spacing="7">
+                <materialIcons:MaterialIcon Kind="ShieldSearch" Width="30" Height="30"
+                                            Foreground="{StaticResource DimBrush}" HorizontalAlignment="Center"/>
+                <TextBlock Text="Readiness checks have not run yet" Foreground="{StaticResource MutedBrush}"
+                           FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <TextBlock Text="Run checks to verify drivers, tools and privileges."
+                           Classes="muted" FontSize="11" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

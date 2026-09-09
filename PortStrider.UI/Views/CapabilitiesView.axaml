@@ -1,0 +1,71 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PortStrider.UI.ViewModels"
+             xmlns:conv="using:PortStrider.UI.Converters"
+             xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="PortStrider.UI.Views.CapabilitiesView"
+             x:DataType="vm:CapabilitiesViewModel">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+        <Border Classes="pageHero">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="13">
+                <Border Width="38" Height="38" CornerRadius="9" Background="{StaticResource AccentDimBrush}">
+                    <materialIcons:MaterialIcon Kind="CheckDecagram" Width="20" Height="20"
+                                                Foreground="{StaticResource AccentBrush}"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                    <TextBlock Text="CAPABILITY MATRIX" Classes="kicker" Foreground="{StaticResource AccentBrush}"/>
+                    <TextBlock Text="See which diagnostics are supported by the selected adapter, operating system and installed tools."
+                               Classes="muted" FontSize="12" TextWrapping="Wrap"/>
+                </StackPanel>
+                <Border Grid.Column="2" Classes="badge" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Features.Count, StringFormat='{}{0} checks'}"
+                               Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" FontSize="11"/>
+                </Border>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" Classes="toolbarCard">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <StackPanel Spacing="3" VerticalAlignment="Center">
+                    <TextBlock Text="ADAPTER ASSESSMENT" Classes="kicker"/>
+                    <TextBlock Text="{Binding Status}" Classes="muted" FontFamily="{StaticResource Mono}"
+                               FontSize="12" TextWrapping="Wrap"/>
+                </StackPanel>
+                <Button Grid.Column="1" Classes="ghost" Command="{Binding RefreshCommand}" VerticalAlignment="Center">
+                    <Button.IsEnabled>
+                        <MultiBinding Converter="{x:Static conv:BoolAndMultiConverter.Instance}">
+                            <Binding Path="Session.HasAdapter"/>
+                            <Binding Path="!IsBusy"/>
+                        </MultiBinding>
+                    </Button.IsEnabled>
+                    <StackPanel Orientation="Horizontal" Spacing="7">
+                        <materialIcons:MaterialIcon Kind="Refresh" Width="16" Height="16"/>
+                        <TextBlock Text="REFRESH"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2">
+            <DataGrid ItemsSource="{Binding Features}" IsReadOnly="True"
+                      CanUserResizeColumns="True" CanUserSortColumns="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="FEATURE" Binding="{Binding Name}" Width="230"/>
+                    <DataGridTextColumn Header="SUPPORT LEVEL" Binding="{Binding Level}" Width="150"/>
+                    <DataGridTextColumn Header="DETAILS" Binding="{Binding Summary}" Width="*"/>
+                    <DataGridTextColumn Header="PREREQUISITE / ACTION" Binding="{Binding Prerequisite}" Width="260"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <StackPanel IsVisible="{Binding !HasFeatures}" HorizontalAlignment="Center"
+                        VerticalAlignment="Center" Spacing="7">
+                <materialIcons:MaterialIcon Kind="CheckDecagramOutline" Width="30" Height="30"
+                                            Foreground="{StaticResource DimBrush}" HorizontalAlignment="Center"/>
+                <TextBlock Text="No capability assessment available" Foreground="{StaticResource MutedBrush}"
+                           FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <TextBlock Text="Select an adapter, then refresh the capability matrix."
+                           Classes="muted" FontSize="11" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,293 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PortStrider.UI.ViewModels"
+             xmlns:models="using:PortStrider.Core.Models"
+             x:Class="PortStrider.UI.Views.ProfilesView"
+             x:DataType="vm:ProfilesViewModel">
+    <UserControl.Styles>
+        <Style Selector="ListBox.profileList">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+        <Style Selector="ListBox.profileList ListBoxItem">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        </Style>
+        <Style Selector="ListBox.profileList ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#1C2430"/>
+        </Style>
+        <Style Selector="ListBox.profileList ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#163A38"/>
+        </Style>
+        <Style Selector="ComboBox.profileField">
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="Background" Value="#10161F"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}"/>
+            <Setter Property="CornerRadius" Value="8"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,*" RowSpacing="12">
+        <Border Classes="card" Padding="14,12">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="TEST PROFILES" Classes="kicker" Foreground="#2EE6D6"/>
+                    <TextBlock Text="Reusable site settings for addressing, validation, VLANs, and field measurements."
+                               Classes="muted" TextWrapping="Wrap"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Status}" Foreground="#C5D0DC" FontSize="12"
+                               TextAlignment="Right" TextWrapping="Wrap" MaxWidth="340"/>
+                    <TextBlock Text="{Binding Profiles.Count, StringFormat='{}{0} saved profiles'}"
+                               Classes="muted" FontSize="11" TextAlignment="Right"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" ColumnDefinitions="270,*" ColumnSpacing="12">
+            <Border Classes="card" Padding="12">
+                <Grid RowDefinitions="Auto,*,Auto,Auto" RowSpacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="SAVED PROFILES" Classes="kicker"/>
+                            <TextBlock Text="Select a profile to configure" Classes="muted" FontSize="11"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" Background="{StaticResource AccentDimBrush}" CornerRadius="10"
+                                Padding="8,3" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Profiles.Count}" Foreground="{StaticResource AccentBrush}"
+                                       FontWeight="SemiBold" FontSize="11"/>
+                        </Border>
+                    </Grid>
+
+                    <ListBox Grid.Row="1" Classes="profileList"
+                             ItemsSource="{Binding Profiles}" SelectedItem="{Binding Selected}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:TestProfile">
+                                <Grid Margin="10,9" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                    <StackPanel Spacing="3">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Classes="muted" FontSize="11">
+                                            <Run Text="{Binding AddressMode}"/>
+                                            <Run Text="  ·  "/>
+                                            <Run Text="{Binding CableUnit}"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="›" Foreground="{StaticResource DimBrush}"
+                                               FontSize="18" VerticalAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <Border Grid.Row="2" Background="#10161F" BorderBrush="{StaticResource BorderBrushSoft}"
+                            BorderThickness="1" CornerRadius="8" Padding="8">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBox Classes="field" Watermark="New profile name"
+                                     Text="{Binding NewProfileName}"/>
+                            <Button Grid.Column="1" Classes="primary" Content="CREATE"
+                                    Command="{Binding CreateCommand}" VerticalAlignment="Stretch"/>
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button Classes="ghost" Content="DUPLICATE" Command="{Binding DuplicateCommand}"/>
+                        <Button Grid.Column="1" Classes="ghost" Content="EXPORT" Command="{Binding ExportCommand}"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Spacing="12">
+                    <Border Classes="card" Padding="16">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                            <StackPanel Spacing="5">
+                                <TextBlock Text="EDITING PROFILE" Classes="kicker" Foreground="#2EE6D6"/>
+                                <TextBlock Text="{Binding Selected.Name, FallbackValue='Select a profile'}"
+                                           FontSize="22" FontWeight="SemiBold"/>
+                                <StackPanel Orientation="Horizontal" Spacing="7">
+                                    <Border Background="#15261F" CornerRadius="10" Padding="8,3">
+                                        <TextBlock Text="{Binding AddressMode}" Foreground="{StaticResource OkBrush}"
+                                                   FontSize="11" FontWeight="SemiBold"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding Session.SelectedAdapter.DisplayLabel, FallbackValue='No adapter selected'}"
+                                               Classes="muted" FontSize="11" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <Button Grid.Column="1" Classes="primary" Content="SAVE CHANGES"
+                                    Command="{Binding SaveCommand}" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Border Classes="card" Padding="16">
+                            <StackPanel Spacing="12">
+                                <StackPanel Spacing="3">
+                                    <TextBlock Text="ADDRESSING" Classes="kicker"/>
+                                    <TextBlock Text="How the test interface obtains network settings."
+                                               Classes="muted" FontSize="11" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="ADDRESS MODE" Classes="kicker"/>
+                                    <ComboBox Classes="profileField" ItemsSource="{Binding AddressModes}"
+                                              SelectedItem="{Binding AddressMode}"/>
+                                </StackPanel>
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="DHCP OPTION" Classes="kicker"/>
+                                    <ComboBox Classes="profileField" ItemsSource="{Binding DhcpOptions}"
+                                              SelectedItem="{Binding DhcpOption}"/>
+                                </StackPanel>
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="VENDOR CLASS · OPTION 60" Classes="kicker"/>
+                                    <TextBox Classes="field" Watermark="Optional vendor identifier"
+                                             Text="{Binding DhcpVendorClass}"/>
+                                </StackPanel>
+                                <StackPanel Spacing="8" IsVisible="{Binding IsStatic}">
+                                    <TextBlock Text="STATIC IPv4" Classes="kicker"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowDefinitions="Auto,Auto" RowSpacing="8">
+                                        <TextBox Classes="field" Watermark="Address (192.168.1.50)" Text="{Binding StaticIpv4}"/>
+                                        <TextBox Grid.Column="1" Classes="field" Watermark="Mask or /24" Text="{Binding StaticSubnet}"/>
+                                        <TextBox Grid.Row="1" Classes="field" Watermark="Gateway" Text="{Binding StaticGateway}"/>
+                                        <TextBox Grid.Row="1" Grid.Column="1" Classes="field" Watermark="DNS (comma-separated)" Text="{Binding StaticDns}"/>
+                                    </Grid>
+                                    <TextBlock Text="Applied to the test interface for the duration of AutoTest (Linux), then removed."
+                                               Classes="muted" FontSize="11" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="1" Classes="card" Padding="16">
+                            <StackPanel Spacing="12">
+                                <StackPanel Spacing="3">
+                                    <TextBlock Text="CONNECT · VLAN · LINK" Classes="kicker"/>
+                                    <TextBlock Text="How the tester presents itself to the switch port (G2 connect settings)."
+                                               Classes="muted" FontSize="11" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <Grid ColumnDefinitions="*,120" ColumnSpacing="8">
+                                    <StackPanel Spacing="5">
+                                        <TextBlock Text="VLAN ID" Classes="kicker"/>
+                                        <NumericUpDown Minimum="0" Maximum="4094" Watermark="Untagged" Value="{Binding VlanId}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Spacing="5">
+                                        <TextBlock Text="PRIORITY" Classes="kicker"/>
+                                        <ComboBox Classes="profileField" ItemsSource="{Binding VlanPriorities}" SelectedItem="{Binding VlanPriority}"/>
+                                    </StackPanel>
+                                </Grid>
+                                <TextBlock Text="Leave VLAN empty for untagged access ports. Tagged tests create a temporary 802.1Q sub-interface (Linux)."
+                                           Classes="muted" FontSize="11" TextWrapping="Wrap"/>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                    <StackPanel Spacing="5">
+                                        <TextBlock Text="SPEED" Classes="kicker"/>
+                                        <ComboBox Classes="profileField" ItemsSource="{Binding LinkSpeeds}" SelectedItem="{Binding LinkSpeed}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Spacing="5">
+                                        <TextBlock Text="DUPLEX" Classes="kicker"/>
+                                        <ComboBox Classes="profileField" ItemsSource="{Binding DuplexSettings}" SelectedItem="{Binding LinkDuplex}"/>
+                                    </StackPanel>
+                                </Grid>
+                                <TextBlock Text="Auto keeps auto-negotiation; anything else is forced with ethtool for the test and flagged if the link does not match."
+                                           Classes="muted" FontSize="11" TextWrapping="Wrap"/>
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="USER-DEFINED MAC" Classes="kicker"/>
+                                    <TextBox Classes="field" Watermark="Leave empty to use the NIC's own address" Text="{Binding OverrideMac}"/>
+                                </StackPanel>
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="PROXY URL" Classes="kicker"/>
+                                    <TextBox Classes="field" Watermark="http://proxy.example:8080"
+                                             Text="{Binding ProxyUrl}"/>
+                                    <TextBlock Text="Used by HTTP and TLS validation targets."
+                                               Classes="muted" FontSize="11"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <Border Classes="card" Padding="16">
+                        <StackPanel Spacing="12">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Spacing="3">
+                                    <TextBlock Text="802.1X AUTHENTICATION" Classes="kicker"/>
+                                    <TextBlock Text="Authenticate the port before addressing using wpa_supplicant (wired driver)."
+                                               Classes="muted" FontSize="11" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Enable8021X}" OnContent="Enabled" OffContent="Disabled"/>
+                            </Grid>
+                            <Grid ColumnDefinitions="150,*,*" ColumnSpacing="8" RowDefinitions="Auto,Auto,Auto" RowSpacing="8" IsVisible="{Binding Enable8021X}">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="EAP METHOD" Classes="kicker"/>
+                                    <ComboBox Classes="profileField" ItemsSource="{Binding EapTypes}" SelectedItem="{Binding EapType}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Spacing="5">
+                                    <TextBlock Text="IDENTITY" Classes="kicker"/>
+                                    <TextBox Classes="field" Watermark="user@domain" Text="{Binding Username8021X}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Spacing="5">
+                                    <TextBlock Text="PASSWORD / KEY PASSPHRASE" Classes="kicker"/>
+                                    <TextBox Classes="field" PasswordChar="•" Text="{Binding Password8021X}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="1" Grid.Column="1" Spacing="5">
+                                    <TextBlock Text="ANONYMOUS IDENTITY (OPTIONAL)" Classes="kicker"/>
+                                    <TextBox Classes="field" Watermark="anonymous@domain" Text="{Binding AnonymousIdentity8021X}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="1" Grid.Column="2" Spacing="5">
+                                    <TextBlock Text="CA CERTIFICATE PATH (OPTIONAL)" Classes="kicker"/>
+                                    <TextBox Classes="field" Watermark="/etc/ssl/certs/corp-ca.pem" Text="{Binding CaCertPath8021X}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="2" Grid.Column="1" Spacing="5" IsVisible="{Binding IsEapTls}">
+                                    <TextBlock Text="CLIENT CERTIFICATE (TLS)" Classes="kicker"/>
+                                    <TextBox Classes="field" Watermark="/path/client.pem" Text="{Binding ClientCertPath8021X}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="2" Grid.Column="2" Spacing="5" IsVisible="{Binding IsEapTls}">
+                                    <TextBlock Text="CLIENT PRIVATE KEY (TLS)" Classes="kicker"/>
+                                    <TextBox Classes="field" Watermark="/path/client.key" Text="{Binding ClientKeyPath8021X}"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="Credentials are stored in the profile JSON in clear text — keep site profiles on the tester only."
+                                       Classes="muted" FontSize="11" IsVisible="{Binding Enable8021X}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="card" Padding="16">
+                        <Grid ColumnDefinitions="*,240" ColumnSpacing="24">
+                            <StackPanel Spacing="10">
+                                <StackPanel Spacing="3">
+                                    <TextBlock Text="TEST FLOW" Classes="kicker"/>
+                                    <TextBlock Text="Choose which checks AutoTest includes and where it stops."
+                                               Classes="muted" FontSize="11"/>
+                                </StackPanel>
+                                <CheckBox Content="Run IPv6 connectivity tests"
+                                          IsChecked="{Binding EnableIpv6}"/>
+                                <CheckBox Content="Include advertised PoE from LLDP/CDP neighbor frames"
+                                          IsChecked="{Binding EnablePoeAdvertised}"/>
+                                <Grid ColumnDefinitions="*,120,*" ColumnSpacing="8">
+                                    <StackPanel Spacing="5">
+                                        <TextBlock Text="STOP AFTER" Classes="kicker"/>
+                                        <ComboBox Classes="profileField" ItemsSource="{Binding StopAfterOptions}" SelectedItem="{Binding StopAfter}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Spacing="5">
+                                        <TextBlock Text="PROBES / HOST" Classes="kicker"/>
+                                        <NumericUpDown Minimum="1" Maximum="10" Value="{Binding PingCount}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Spacing="5">
+                                        <TextBlock Text="DNS QUERY NAME" Classes="kicker"/>
+                                        <TextBox Classes="field" Watermark="cloudflare.com" Text="{Binding DnsQueryName}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Spacing="5" VerticalAlignment="Center">
+                                <TextBlock Text="CABLE DISTANCE UNIT" Classes="kicker"/>
+                                <ComboBox Classes="profileField" ItemsSource="{Binding CableUnits}"
+                                          SelectedItem="{Binding CableUnit}"/>
+                                <TextBlock Text="Applied to TDR and cable-pair results."
+                                           Classes="muted" FontSize="11" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>

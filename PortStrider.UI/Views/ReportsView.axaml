@@ -1,0 +1,148 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PortStrider.UI.ViewModels"
+             xmlns:models="using:PortStrider.Core.Models"
+             xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="PortStrider.UI.Views.ReportsView"
+             x:DataType="vm:ReportsViewModel">
+
+    <Grid RowDefinitions="Auto,*" RowSpacing="12">
+        <Border Classes="pageHero">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="13">
+                <Border Width="38" Height="38" CornerRadius="9" Background="{StaticResource AccentDimBrush}">
+                    <materialIcons:MaterialIcon Kind="FileDocumentMultiple" Width="20" Height="20"
+                                                Foreground="{StaticResource AccentBrush}"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                    <TextBlock Text="SESSION REPORTS" Classes="kicker" Foreground="{StaticResource AccentBrush}"/>
+                    <TextBlock Text="Review, search and export saved AutoTest results and evidence bundles."
+                               Classes="muted" FontSize="12"/>
+                </StackPanel>
+                <Border Grid.Column="2" Classes="badge" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Sessions.Count, StringFormat='{}{0} saved'}"
+                               Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" FontSize="11"/>
+                </Border>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" ColumnDefinitions="300,*" ColumnSpacing="12">
+            <Border Classes="card" Padding="0">
+                <Grid RowDefinitions="Auto,Auto,*">
+                    <StackPanel Margin="14,13,14,10" Spacing="4">
+                        <TextBlock Text="SAVED SESSIONS" Classes="kicker"/>
+                        <TextBlock Text="Select a result to inspect" Classes="muted" FontSize="11"/>
+                    </StackPanel>
+                    <Border Grid.Row="1" Padding="12,0,12,12" BorderBrush="{StaticResource BorderBrushSoft}" BorderThickness="0,0,0,1">
+                        <TextBox Classes="field" Watermark="Search by site, adapter or date" Text="{Binding Search}"/>
+                    </Border>
+                    <Grid Grid.Row="2">
+                        <ListBox ItemsSource="{Binding Sessions}" SelectedItem="{Binding Selected}"
+                                 Background="Transparent" BorderThickness="0" Padding="7">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:SessionReport">
+                                    <Grid Margin="8,7" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <StackPanel Spacing="3">
+                                            <TextBlock Text="{Binding ProfileName, FallbackValue='AutoTest session'}"
+                                                       FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding StartedAt, StringFormat='{}{0:yyyy-MM-dd  HH:mm}'}"
+                                                       Classes="muted" FontSize="11" FontFamily="{StaticResource Mono}"/>
+                                            <TextBlock Classes="muted" FontSize="11">
+                                                <Run Text="{Binding AdapterName}"/>
+                                                <Run Text=" · "/>
+                                                <Run Text="{Binding SiteLabel, FallbackValue='No site label'}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <Border Grid.Column="1" Classes="badge" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Overall}" Foreground="{StaticResource AccentBrush}"
+                                                       FontWeight="Bold" FontSize="10"/>
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <StackPanel IsVisible="{Binding !HasSessions}" HorizontalAlignment="Center"
+                                    VerticalAlignment="Center" Spacing="7" Margin="18">
+                            <materialIcons:MaterialIcon Kind="FileDocumentOutline" Width="30" Height="30"
+                                                        Foreground="{StaticResource DimBrush}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="No saved sessions" Foreground="{StaticResource MutedBrush}"
+                                       FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Run AutoTest to create the first report."
+                                       Classes="muted" FontSize="11" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*" RowSpacing="12">
+                <Border Classes="toolbarCard">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <StackPanel Spacing="3" VerticalAlignment="Center">
+                            <TextBlock Text="REPORT ACTIONS" Classes="kicker"/>
+                            <TextBlock Text="{Binding ExportStatus, FallbackValue='Choose an export format'}"
+                                       Classes="muted" FontSize="11" TextTrimming="CharacterEllipsis" MaxWidth="480"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="7">
+                            <Button Classes="ghost" Command="{Binding ExportJsonCommand}" Content="JSON" IsEnabled="{Binding HasSelection}"/>
+                            <Button Classes="ghost" Command="{Binding ExportCsvCommand}" Content="CSV" IsEnabled="{Binding HasSelection}"/>
+                            <Button Classes="ghost" Command="{Binding ExportPdfCommand}" Content="PDF" IsEnabled="{Binding HasSelection}"/>
+                            <Button Classes="primary" Command="{Binding ExportBundleCommand}" IsEnabled="{Binding HasSelection}">
+                                <StackPanel Orientation="Horizontal" Spacing="7">
+                                    <materialIcons:MaterialIcon Kind="FolderZip" Width="16" Height="16"/>
+                                    <TextBlock Text="EXPORT BUNDLE"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Classes="ghost" Command="{Binding DuplicateSelectedCommand}"
+                                    IsEnabled="{Binding HasSelection}"
+                                    ToolTip.Tip="Duplicate selected report">
+                                <materialIcons:MaterialIcon Kind="ContentDuplicate" Width="16" Height="16"/>
+                            </Button>
+                            <Button Classes="danger" Command="{Binding DeleteSelectedCommand}"
+                                    IsEnabled="{Binding HasSelection}"
+                                    ToolTip.Tip="Delete selected report">
+                                <materialIcons:MaterialIcon Kind="DeleteOutline" Width="16" Height="16"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Row="1" ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                    <Border Classes="inset">
+                        <StackPanel Spacing="3">
+                            <TextBlock Text="OVERALL" Classes="kicker"/>
+                            <TextBlock Text="{Binding Selected.Overall, FallbackValue='—'}" Classes="metric"
+                                       Foreground="{StaticResource AccentBrush}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" Classes="inset">
+                        <StackPanel Spacing="3">
+                            <TextBlock Text="PROFILE / SITE" Classes="kicker"/>
+                            <TextBlock Text="{Binding Selected.ProfileName, FallbackValue='—'}" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding Selected.SiteLabel}" Classes="muted" FontSize="11"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="2" Classes="inset">
+                        <StackPanel Spacing="3">
+                            <TextBlock Text="INTERFACE / ADDRESS" Classes="kicker"/>
+                            <TextBlock Text="{Binding Selected.AdapterName, FallbackValue='—'}" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding Selected.Ipv4}" Classes="muted" FontFamily="{StaticResource Mono}" FontSize="11"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Border Grid.Row="2" Classes="card" Background="#0B1017">
+                    <DockPanel>
+                        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
+                            <TextBlock Text="REPORT DETAILS" Classes="kicker"/>
+                            <TextBlock Grid.Column="1" Text="JSON PREVIEW" Classes="kicker" Foreground="{StaticResource AccentBrush}"/>
+                        </Grid>
+                        <ScrollViewer>
+                            <TextBlock Text="{Binding Preview}" FontFamily="{StaticResource Mono}" FontSize="12"
+                                       Foreground="#B7C4D4" LineHeight="18" TextWrapping="Wrap"/>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

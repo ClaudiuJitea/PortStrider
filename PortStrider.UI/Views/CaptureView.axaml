@@ -1,0 +1,124 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PortStrider.UI.ViewModels"
+             xmlns:models="using:PortStrider.Core.Models"
+             xmlns:conv="using:PortStrider.UI.Converters"
+             xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="PortStrider.UI.Views.CaptureView"
+             x:DataType="vm:CaptureViewModel">
+
+    <Grid RowDefinitions="Auto,Auto,*,170" RowSpacing="12">
+        <Border Classes="pageHero">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="13">
+                <Border Width="38" Height="38" CornerRadius="9" Background="{StaticResource AccentDimBrush}">
+                    <materialIcons:MaterialIcon Kind="Radar" Width="20" Height="20"
+                                                Foreground="{StaticResource AccentBrush}"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                    <TextBlock Text="PACKET CAPTURE" Classes="kicker" Foreground="{StaticResource AccentBrush}"/>
+                    <TextBlock Text="Capture live Ethernet frames, filter traffic and inspect packet bytes."
+                               Classes="muted" FontSize="12"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Spacing="2">
+                    <TextBlock Text="CAPTURE STATUS" Classes="kicker" TextAlignment="Right"/>
+                    <TextBlock Text="{Binding Status}" Foreground="{StaticResource AccentBrush}"
+                               FontFamily="{StaticResource Mono}" FontSize="11" TextAlignment="Right"
+                               MaxWidth="420" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" Classes="toolbarCard">
+            <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="BPF CAPTURE FILTER" Classes="kicker"/>
+                        <TextBox Classes="field" Watermark="tcp port 443  ·  ether proto 0x88cc  ·  icmp"
+                                 Text="{Binding Filter}" IsEnabled="{Binding !IsCapturing}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom">
+                        <Button Classes="primary" Command="{Binding StartCommand}">
+                            <Button.IsEnabled>
+                                <MultiBinding Converter="{x:Static conv:BoolAndMultiConverter.Instance}">
+                                    <Binding Path="Session.HasAdapter"/>
+                                    <Binding Path="!IsCapturing"/>
+                                </MultiBinding>
+                            </Button.IsEnabled>
+                            <StackPanel Orientation="Horizontal" Spacing="7">
+                                <materialIcons:MaterialIcon Kind="RecordCircle" Width="16" Height="16"/>
+                                <TextBlock Text="START CAPTURE"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="danger" Command="{Binding StopCommand}" IsEnabled="{Binding IsCapturing}">
+                            <StackPanel Orientation="Horizontal" Spacing="7">
+                                <materialIcons:MaterialIcon Kind="StopCircle" Width="16" Height="16"/>
+                                <TextBlock Text="STOP"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="ghost" Command="{Binding SaveCommand}" IsEnabled="{Binding HasFrames}">
+                            <StackPanel Orientation="Horizontal" Spacing="7">
+                                <materialIcons:MaterialIcon Kind="ContentSave" Width="16" Height="16"/>
+                                <TextBlock Text="SAVE PCAP"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="ghost" Command="{Binding ClearCommand}" Content="CLEAR" IsEnabled="{Binding HasFrames}"/>
+                    </StackPanel>
+                </Grid>
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                    <TextBlock Text="QUICK FILTERS" Classes="kicker" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" IsEnabled="{Binding !IsCapturing}">
+                        <Button Classes="ghost" Padding="10,5" Command="{Binding ApplyPresetCommand}" CommandParameter="All traffic">ALL TRAFFIC</Button>
+                        <Button Classes="ghost" Padding="10,5" Command="{Binding ApplyPresetCommand}" CommandParameter="LLDP/CDP">LLDP / CDP</Button>
+                        <Button Classes="ghost" Padding="10,5" Command="{Binding ApplyPresetCommand}" CommandParameter="IPv4">IPv4</Button>
+                        <Button Classes="ghost" Padding="10,5" Command="{Binding ApplyPresetCommand}" CommandParameter="TCP">TCP</Button>
+                        <Button Classes="ghost" Padding="10,5" Command="{Binding ApplyPresetCommand}" CommandParameter="UDP">UDP</Button>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <TextBlock Text="SNAP LENGTH" Classes="kicker" VerticalAlignment="Center"/>
+                        <NumericUpDown Width="125" Watermark="Full frame" Value="{Binding SnapLength}"
+                                       IsEnabled="{Binding !IsCapturing}"
+                                       Minimum="0" Maximum="65535" Increment="64"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="2">
+            <DataGrid ItemsSource="{Binding Frames}" SelectedItem="{Binding SelectedFrame}"
+                      IsReadOnly="True" CanUserResizeColumns="True" CanUserSortColumns="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="#" Binding="{Binding Number}" Width="70"/>
+                    <DataGridTextColumn Header="TIME" Binding="{Binding TimeLabel}" Width="120"/>
+                    <DataGridTextColumn Header="LENGTH" Binding="{Binding Length}" Width="85"/>
+                    <DataGridTextColumn Header="PROTOCOL" Binding="{Binding Protocol}" Width="110"/>
+                    <DataGridTextColumn Header="SOURCE" Binding="{Binding Source}" Width="200"/>
+                    <DataGridTextColumn Header="DESTINATION" Binding="{Binding Destination}" Width="200"/>
+                    <DataGridTextColumn Header="SUMMARY" Binding="{Binding Summary}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <StackPanel IsVisible="{Binding !HasFrames}" HorizontalAlignment="Center"
+                        VerticalAlignment="Center" Spacing="7">
+                <materialIcons:MaterialIcon Kind="Radar" Width="30" Height="30"
+                                            Foreground="{StaticResource DimBrush}" HorizontalAlignment="Center"/>
+                <TextBlock Text="No captured frames" Foreground="{StaticResource MutedBrush}"
+                           FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <TextBlock Text="Choose a filter and start capture to stream packets here."
+                           Classes="muted" FontSize="11" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+
+        <Border Grid.Row="3" Classes="card" Padding="12" Background="#0B1017">
+            <DockPanel>
+                <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto">
+                    <TextBlock Text="SELECT A FRAME TO INSPECT ITS RAW BYTES" Classes="kicker"/>
+                    <TextBlock Grid.Column="1" Text="HEX / ASCII" Classes="kicker" Foreground="{StaticResource AccentBrush}"/>
+                </Grid>
+                <ScrollViewer Margin="0,8,0,0">
+                    <TextBlock FontFamily="{StaticResource Mono}" FontSize="12" Foreground="#C5D0DC"
+                               Text="{Binding SelectedFrame.Raw, Converter={x:Static conv:HexDumpConverter.Instance}}"/>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

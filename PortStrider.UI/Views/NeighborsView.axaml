@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PortStrider.UI.ViewModels"
+             xmlns:models="using:PortStrider.Core.Models"
+             xmlns:conv="using:PortStrider.UI.Converters"
+             xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="PortStrider.UI.Views.NeighborsView"
+             x:DataType="vm:NeighborsViewModel">
+
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+        <Border Classes="pageHero">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="13">
+                <Border Width="38" Height="38" CornerRadius="9" Background="{StaticResource AccentDimBrush}">
+                    <materialIcons:MaterialIcon Kind="AccessPointNetwork" Width="20" Height="20"
+                                                Foreground="{StaticResource AccentBrush}"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                    <TextBlock Text="NETWORK NEIGHBORS" Classes="kicker" Foreground="{StaticResource AccentBrush}"/>
+                    <TextBlock Text="Inspect the local ARP and IPv6 neighbor cache for discovered endpoints."
+                               Classes="muted" FontSize="12"/>
+                </StackPanel>
+                <Border Grid.Column="2" Classes="badge" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Entries.Count, StringFormat='{}{0} entries'}"
+                               Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" FontSize="11"/>
+                </Border>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" Classes="toolbarCard">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <StackPanel Spacing="3" VerticalAlignment="Center">
+                    <TextBlock Text="SCAN STATUS" Classes="kicker"/>
+                    <TextBlock Text="{Binding Status}" Foreground="{StaticResource MutedBrush}"
+                               FontFamily="{StaticResource Mono}" FontSize="12"/>
+                </StackPanel>
+                <Button Grid.Column="1" Classes="primary" Command="{Binding RefreshCommand}" VerticalAlignment="Center">
+                    <Button.IsEnabled>
+                        <MultiBinding Converter="{x:Static conv:BoolAndMultiConverter.Instance}">
+                            <Binding Path="Session.HasAdapter"/>
+                            <Binding Path="!IsLoading"/>
+                        </MultiBinding>
+                    </Button.IsEnabled>
+                    <StackPanel Orientation="Horizontal" Spacing="7">
+                        <materialIcons:MaterialIcon Kind="Refresh" Width="16" Height="16"/>
+                        <TextBlock Text="REFRESH CACHE"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2">
+            <DataGrid ItemsSource="{Binding Entries}" IsReadOnly="True"
+                      CanUserResizeColumns="True" CanUserSortColumns="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="IP ADDRESS" Binding="{Binding Address}" Width="*"/>
+                    <DataGridTextColumn Header="MAC ADDRESS" Binding="{Binding Mac}" Width="220"/>
+                    <DataGridTextColumn Header="INTERFACE" Binding="{Binding InterfaceName}" Width="180"/>
+                    <DataGridTextColumn Header="STATE" Binding="{Binding State}" Width="160"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <StackPanel IsVisible="{Binding !HasEntries}" HorizontalAlignment="Center"
+                        VerticalAlignment="Center" Spacing="7">
+                <materialIcons:MaterialIcon Kind="AccessPointNetworkOff" Width="30" Height="30"
+                                            Foreground="{StaticResource DimBrush}" HorizontalAlignment="Center"/>
+                <TextBlock Text="No network neighbors to display" Foreground="{StaticResource MutedBrush}"
+                           FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <TextBlock Text="Refresh after generating traffic on the selected interface."
+                           Classes="muted" FontSize="11" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

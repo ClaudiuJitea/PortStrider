@@ -1,0 +1,106 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PortStrider.UI.ViewModels"
+        xmlns:models="using:PortStrider.Core.Models"
+        xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
+        x:Class="PortStrider.UI.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="PortStrider — Ethernet Field Tester"
+        Width="1180" Height="720"
+        MinWidth="960" MinHeight="600"
+        TransparencyBackgroundFallback="#07090C"
+        Background="#07090C">
+
+    <Grid ColumnDefinitions="210,*" RowDefinitions="58,*,28" Background="#07090C">
+        <!-- Brand rail header -->
+        <Border Grid.Row="0" Grid.Column="0" Background="#0C1016" BorderBrush="#1A2230" BorderThickness="0,0,1,1">
+            <StackPanel Orientation="Horizontal" Spacing="9" VerticalAlignment="Center" Margin="14,0">
+                <Border Background="#163A38" CornerRadius="8" Padding="8">
+                    <materialIcons:MaterialIcon Kind="Ethernet" Width="18" Height="18" Foreground="#2EE6D6"/>
+                </Border>
+                <StackPanel Spacing="0">
+                    <TextBlock Text="PORTSTRIDER" FontWeight="Black" FontSize="15" Foreground="#F2F5F8" LetterSpacing="1"/>
+                    <TextBlock Text="ETHERNET FIELD TESTER" FontSize="10" Foreground="#2EE6D6" LetterSpacing="1.4"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Top toolbar -->
+        <Border Grid.Row="0" Grid.Column="1" Background="#0E131B" BorderBrush="#1A2230" BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="*,Auto" Margin="14,0">
+                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="ADAPTER" Classes="kicker" VerticalAlignment="Center"/>
+                    <ComboBox Classes="toolbar"
+                              ItemsSource="{Binding Session.Adapters}"
+                              SelectedItem="{Binding Session.SelectedAdapter}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:AdapterInfo">
+                                <TextBlock Text="{Binding DisplayLabel}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button Classes="ghost" Command="{Binding RefreshAdaptersCommand}"
+                            IsEnabled="{Binding !Session.IsScanning}" ToolTip.Tip="Rescan NICs">
+                        <materialIcons:MaterialIcon Kind="RefreshCircle" Width="18" Height="18"/>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Session.Rates.RxLabel, FallbackValue='0.00 Mbps ↓'}"
+                               Foreground="{StaticResource OkBrush}" FontFamily="{StaticResource Mono}" FontSize="11"/>
+                    <TextBlock Text="{Binding Session.Rates.TxLabel, FallbackValue='0.00 Mbps ↑'}"
+                               Foreground="{StaticResource BlueBrush}" FontFamily="{StaticResource Mono}" FontSize="11"/>
+                    <Border Background="#171E28" BorderBrush="{StaticResource BorderBrushSoft}"
+                            BorderThickness="1" CornerRadius="7" Padding="8,4">
+                        <TextBlock FontFamily="{StaticResource Mono}" FontSize="10" Foreground="{StaticResource MutedBrush}">
+                            <Run Text="ERR "/><Run Text="{Binding Session.Rates.RxErrors, FallbackValue=0}"/>
+                            <Run Text="/"/><Run Text="{Binding Session.Rates.TxErrors, FallbackValue=0}"/>
+                            <Run Text="  DROP "/><Run Text="{Binding Session.Rates.RxDropped, FallbackValue=0}"/>
+                            <Run Text="/"/><Run Text="{Binding Session.Rates.TxDropped, FallbackValue=0}"/>
+                        </TextBlock>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Navigation -->
+        <Border Grid.Row="1" Grid.Column="0" Background="#0C1016" BorderBrush="#1A2230" BorderThickness="0,0,1,0">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Bottom" Margin="18,10,18,16" TextWrapping="Wrap"
+                           Text="Cross-platform Ethernet diagnostics for Linux and Windows."
+                           Classes="muted" FontSize="11"/>
+                <ListBox Classes="nav" ItemsSource="{Binding NavItems}" SelectedItem="{Binding SelectedNav}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:NavItem">
+                            <Grid ColumnDefinitions="Auto,*" Margin="8,6">
+                                <Border Width="30" Height="30" CornerRadius="8" Background="#141B24" Margin="0,0,10,0">
+                                    <materialIcons:MaterialIcon Kind="{Binding Icon}" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#2EE6D6"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1">
+                                    <TextBlock Text="{Binding Label}" FontWeight="SemiBold" FontSize="13"/>
+                                    <TextBlock Text="{Binding Caption}" FontSize="11" Foreground="#6B7789"/>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- Page host -->
+        <Border Grid.Row="1" Grid.Column="1" Background="#07090C" Padding="14">
+            <ContentControl Content="{Binding CurrentPage}"/>
+        </Border>
+
+        <!-- Status bar -->
+        <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Background="#0A0D12" BorderBrush="#1A2230" BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="*,Auto" Margin="16,0">
+                <TextBlock Text="{Binding Session.StatusLine}" VerticalAlignment="Center" FontSize="11" Foreground="#8B96A8" FontFamily="{StaticResource Mono}"/>
+                <TextBlock Grid.Column="1" Text="L2 · L3 · CAPTURE · TDR" VerticalAlignment="Center" FontSize="10" Foreground="#3D5A56" LetterSpacing="1.5"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

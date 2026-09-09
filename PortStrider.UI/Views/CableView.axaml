@@ -1,0 +1,115 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PortStrider.UI.ViewModels"
+             xmlns:models="using:PortStrider.Core.Models"
+             xmlns:conv="using:PortStrider.UI.Converters"
+             xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="PortStrider.UI.Views.CableView"
+             x:DataType="vm:CableViewModel">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="16">
+        <Border Classes="pageHero">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="13">
+                <Border Width="38" Height="38" CornerRadius="9" Background="{StaticResource AccentDimBrush}">
+                    <materialIcons:MaterialIcon Kind="EthernetCable" Width="20" Height="20"
+                                                Foreground="{StaticResource AccentBrush}"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Text="CABLE &amp; PHY DIAGNOSTICS" Classes="kicker" Foreground="{StaticResource AccentBrush}"/>
+                    <TextBlock Text="Run driver-assisted TDR pair diagnostics and inspect optical transceiver telemetry."
+                               Classes="muted" FontSize="12" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding ProgressText}" Margin="0,4,0,0" FontFamily="{StaticResource Mono}"
+                               FontSize="11" Foreground="{StaticResource AccentBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Text="DISTANCE UNIT" Classes="kicker"/>
+                    <ComboBox ItemsSource="{Binding Units}" SelectedItem="{Binding Unit}" MinWidth="120"/>
+                </StackPanel>
+                <StackPanel Grid.Column="3" Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Text="ACTION" Classes="kicker"/>
+                    <Button Classes="primary" Command="{Binding RunCommand}" MinHeight="34">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{x:Static conv:BoolAndMultiConverter.Instance}">
+                                <Binding Path="Session.HasAdapter"/>
+                                <Binding Path="!IsRunning"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <materialIcons:MaterialIcon Kind="Pulse" Width="16" Height="16"/>
+                            <TextBlock Text="RUN CABLE TEST"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" MinHeight="92">
+            <ItemsControl ItemsSource="{Binding Result.Pairs}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:CablePairResult">
+                        <Border Classes="card" Width="240" Margin="0,0,12,12" Padding="14,12">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Border Width="34" Height="34" CornerRadius="17" Background="{StaticResource AccentDimBrush}">
+                                    <materialIcons:MaterialIcon Kind="CableData" Width="17" Height="17"
+                                                                Foreground="{StaticResource AccentBrush}"
+                                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="3">
+                                    <TextBlock Text="{Binding Pair}" Classes="kicker"/>
+                                    <TextBlock Text="{Binding Status}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding Distance}" Classes="muted" FontFamily="{StaticResource Mono}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Border Classes="inset" IsVisible="{Binding !HasResult}">
+                <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <materialIcons:MaterialIcon Kind="CableData" Width="22" Height="22" Foreground="{StaticResource DimBrush}"/>
+                    <TextBlock Text="Run a cable test to view pair status and estimated fault distance."
+                               Classes="muted" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="2" Classes="card" IsVisible="{Binding HasSfpResult}">
+            <StackPanel Spacing="5">
+                <TextBlock Text="SFP / OPTICS" Classes="kicker" Foreground="#2EE6D6"/>
+                <TextBlock Text="{Binding SfpResult.Summary}" TextWrapping="Wrap"/>
+                <TextBlock Classes="muted" TextWrapping="Wrap">
+                    <Run Text="{Binding SfpResult.Vendor}"/><Run Text="  "/>
+                    <Run Text="{Binding SfpResult.PartNumber}"/><Run Text="  S/N "/>
+                    <Run Text="{Binding SfpResult.Serial}"/>
+                </TextBlock>
+                <TextBlock Classes="muted">
+                    <Run Text="Temp "/><Run Text="{Binding SfpResult.Temperature}"/>
+                    <Run Text="  Voltage "/><Run Text="{Binding SfpResult.Voltage}"/>
+                    <Run Text="  TX "/><Run Text="{Binding SfpResult.TxPower}"/>
+                    <Run Text="  RX "/><Run Text="{Binding SfpResult.RxPower}"/>
+                </TextBlock>
+                <TextBlock Text="{Binding SfpResult.Alarms}" Foreground="#FFC44D" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="3" Classes="card" Background="#0B1017">
+            <DockPanel>
+                <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,8">
+                    <TextBlock Text="DRIVER OUTPUT" Classes="kicker"/>
+                    <TextBlock Grid.Column="1" Text="ETHTOOL" Classes="kicker" Foreground="{StaticResource AccentBrush}"/>
+                </Grid>
+                <ScrollViewer>
+                    <TextBlock Text="{Binding Result.RawOutput, FallbackValue='Run a cable test to view driver output.'}"
+                               FontFamily="{StaticResource Mono}" FontSize="12" Foreground="#B7C4D4"
+                               LineHeight="18" TextWrapping="Wrap"/>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

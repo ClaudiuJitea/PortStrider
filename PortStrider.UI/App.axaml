@@ -1,0 +1,234 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PortStrider.UI.App"
+             xmlns:local="using:PortStrider.UI"
+             xmlns:vm="using:PortStrider.UI.ViewModels"
+             xmlns:views="using:PortStrider.UI.Views"
+             xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             RequestedThemeVariant="Dark">
+    <Application.DataTemplates>
+        <DataTemplate DataType="vm:AutoTestViewModel">
+            <views:AutoTestView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:SwitchViewModel">
+            <views:SwitchView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:CaptureViewModel">
+            <views:CaptureView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:ToolsViewModel">
+            <views:ToolsView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:ReflectorViewModel">
+            <views:ReflectorView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:CableViewModel">
+            <views:CableView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:NeighborsViewModel">
+            <views:NeighborsView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:ReportsViewModel">
+            <views:ReportsView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:ProfilesViewModel">
+            <views:ProfilesView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:VlanMonitorViewModel">
+            <views:VlanMonitorView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:CapabilitiesViewModel">
+            <views:CapabilitiesView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:PreFlightViewModel">
+            <views:PreFlightView />
+        </DataTemplate>
+    </Application.DataTemplates>
+
+    <Application.Resources>
+        <SolidColorBrush x:Key="BgBrush" Color="#07090C"/>
+        <SolidColorBrush x:Key="RailBrush" Color="#0C1016"/>
+        <SolidColorBrush x:Key="SurfaceBrush" Color="#121821"/>
+        <SolidColorBrush x:Key="CardBrush" Color="#171E28"/>
+        <SolidColorBrush x:Key="CardAltBrush" Color="#1C2430"/>
+        <SolidColorBrush x:Key="BorderBrushSoft" Color="#2A3444"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#2EE6D6"/>
+        <SolidColorBrush x:Key="AccentDimBrush" Color="#163A38"/>
+        <SolidColorBrush x:Key="TextBrush" Color="#F2F5F8"/>
+        <SolidColorBrush x:Key="MutedBrush" Color="#8B96A8"/>
+        <SolidColorBrush x:Key="DimBrush" Color="#5C6778"/>
+        <SolidColorBrush x:Key="OkBrush" Color="#3DFFA8"/>
+        <SolidColorBrush x:Key="WarnBrush" Color="#FFC44D"/>
+        <SolidColorBrush x:Key="ErrBrush" Color="#FF5D73"/>
+        <SolidColorBrush x:Key="BlueBrush" Color="#5B8CFF"/>
+        <FontFamily x:Key="Mono">ui-monospace, SFMono-Regular, Menlo, Consolas, monospace</FontFamily>
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+        <materialIcons:MaterialIconStyles />
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+
+        <Style Selector="Window">
+            <Setter Property="Background" Value="{StaticResource BgBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="FontFamily" Value="Inter, IBM Plex Sans, Segoe UI, sans-serif"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <Style Selector="TextBlock.kicker">
+            <Setter Property="Foreground" Value="{StaticResource DimBrush}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="LetterSpacing" Value="1.2"/>
+        </Style>
+
+        <Style Selector="TextBlock.metric">
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style Selector="TextBlock.muted">
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+        </Style>
+
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="{StaticResource CardBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="14"/>
+        </Style>
+
+        <Style Selector="Border.pageHero">
+            <Setter Property="Background" Value="#0E171F"/>
+            <Setter Property="BorderBrush" Value="#1D3B3C"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="16,13"/>
+        </Style>
+
+        <Style Selector="Border.toolbarCard">
+            <Setter Property="Background" Value="{StaticResource CardBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="14"/>
+        </Style>
+
+        <Style Selector="Border.inset">
+            <Setter Property="Background" Value="#10161F"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,8"/>
+        </Style>
+
+        <Style Selector="Border.badge">
+            <Setter Property="Background" Value="{StaticResource AccentDimBrush}"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="8,3"/>
+        </Style>
+
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="#071210"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#7AFFF3"/>
+        </Style>
+
+        <Style Selector="Button.ghost">
+            <Setter Property="Background" Value="#1C2430"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <Style Selector="Button.danger">
+            <Setter Property="Background" Value="#3A1820"/>
+            <Setter Property="Foreground" Value="#FF8A9A"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
+        <Style Selector="TextBox.field">
+            <Setter Property="Background" Value="#10161F"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+        </Style>
+
+        <Style Selector="ComboBox.toolbar">
+            <Setter Property="MinWidth" Value="220"/>
+            <Setter Property="Background" Value="#10161F"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+        </Style>
+
+        <Style Selector="NumericUpDown">
+            <Setter Property="Background" Value="#10161F"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+        </Style>
+
+        <Style Selector="ListBox.nav">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,8"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="10"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#151C26"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#163A38"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#1B4643"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected:not(:focus) /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#163A38"/>
+        </Style>
+
+        <Style Selector="TabControl">
+            <Setter Property="Padding" Value="0,12,0,0"/>
+        </Style>
+
+        <Style Selector="DataGrid">
+            <Setter Property="Background" Value="{StaticResource CardBrush}"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="#222A36"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="RowBackground" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="RowHeight" Value="36"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+        </Style>
+        <Style Selector="DataGridColumnHeader">
+            <Setter Property="Background" Value="#10161F"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Padding" Value="10,8"/>
+        </Style>
+    </Application.Styles>
+</Application>

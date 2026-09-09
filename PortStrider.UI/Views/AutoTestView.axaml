@@ -1,0 +1,190 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PortStrider.UI.ViewModels"
+             xmlns:models="using:PortStrider.Core.Models"
+             xmlns:conv="using:PortStrider.UI.Converters"
+             xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="PortStrider.UI.Views.AutoTestView"
+             x:DataType="vm:AutoTestViewModel">
+
+    <Grid ColumnDefinitions="*,300" RowDefinitions="Auto,*" ColumnSpacing="12" RowSpacing="12">
+        <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Classes="pageHero" Padding="14">
+            <Grid ColumnDefinitions="190,*,Auto" ColumnSpacing="12">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="AUTOTEST PROFILE" Classes="kicker" Foreground="#2EE6D6"/>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="{Binding OverallLabel}" FontSize="24" FontWeight="Black"
+                                   Foreground="{Binding Overall, Converter={x:Static conv:StatusToBrushConverter.Instance}}"/>
+                        <TextBlock Text="{Binding DurationLabel}" VerticalAlignment="Bottom" Margin="0,0,0,6" Classes="muted"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Border Background="#3A1A20" CornerRadius="9" Padding="7,2" IsVisible="{Binding HasFailures}">
+                            <TextBlock FontSize="11" FontWeight="Bold" Foreground="#FF6B7A" Text="{Binding FailCount, StringFormat='{}{0} failed'}"/>
+                        </Border>
+                        <Border Background="#3A2E12" CornerRadius="9" Padding="7,2" IsVisible="{Binding HasWarnings}">
+                            <TextBlock FontSize="11" FontWeight="Bold" Foreground="#FFC44D" Text="{Binding WarnCount, StringFormat='{}{0} warnings'}"/>
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Text="{Binding Session.SelectedAdapter.DisplayLabel, FallbackValue='No adapter'}" Classes="muted"/>
+                    <TextBlock Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}"
+                               Foreground="{StaticResource ErrBrush}" FontSize="11" TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <Grid Grid.Column="1" ColumnDefinitions="180,*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="PROFILE" Classes="kicker"/>
+                        <ComboBox ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:TestProfile">
+                                    <TextBlock Text="{Binding Name}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="JOB LABEL" Classes="kicker"/>
+                        <TextBox Classes="field" Watermark="Optional work order" Text="{Binding JobLabel}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Spacing="4">
+                        <TextBlock Text="SITE LABEL" Classes="kicker"/>
+                        <TextBox Classes="field" Watermark="Building / closet" Text="{Binding SiteLabel}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Spacing="4">
+                        <TextBlock Text="TECHNICIAN NOTES" Classes="kicker"/>
+                        <TextBox Classes="field" Watermark="Optional notes saved with the report" Text="{Binding TechnicianNotes}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="10">
+                        <ToggleSwitch IsChecked="{Binding AutoRunOnLink}" OnContent="Auto-run on link-up" OffContent="Auto-run on link-up" FontSize="12"/>
+                        <TextBlock Text="{Binding AutoRunStatus}" Classes="muted" FontSize="11" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+
+                <StackPanel Grid.Column="2" Spacing="4" VerticalAlignment="Top">
+                    <TextBlock Text="ACTION" Classes="kicker"/>
+                    <Button Classes="primary" Command="{Binding RunCommand}" MinHeight="34">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{x:Static conv:BoolAndMultiConverter.Instance}">
+                                <Binding Path="Session.HasAdapter"/>
+                                <Binding Path="!IsRunning"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <materialIcons:MaterialIcon Kind="PlayCircle" Width="18" Height="18"/>
+                            <TextBlock Text="RUN AUTOTEST" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="danger" Command="{Binding CancelCommand}" IsVisible="{Binding IsRunning}"
+                            MinHeight="34" HorizontalAlignment="Stretch" Content="CANCEL"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" Grid.Column="0">
+            <ItemsControl ItemsSource="{Binding Steps}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TestStepViewModel">
+                        <Border Classes="card" Margin="0,0,0,8" Padding="12">
+                            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                                <Ellipse Width="11" Height="11" Margin="0,0,14,0" VerticalAlignment="Center"
+                                         Fill="{Binding Status, Converter={x:Static conv:StatusToBrushConverter.Instance}}"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding Details}" Classes="muted" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <Button Grid.Column="2" Classes="ghost" Margin="10,0,0,0" VerticalAlignment="Center" FontSize="11"
+                                        IsVisible="{Binding CanContinue}"
+                                        Command="{Binding $parent[ItemsControl].((vm:AutoTestViewModel)DataContext).StartContinuousCommand}"
+                                        CommandParameter="{Binding}"
+                                        Content="CONTINUOUS" ToolTip.Tip="Keep probing this host until stopped"/>
+                                <TextBlock Grid.Column="3" Margin="12,0,0,0" VerticalAlignment="Center" FontWeight="Bold" FontSize="11" LetterSpacing="0.8"
+                                           Text="{Binding Status, Converter={x:Static conv:StatusToLabelConverter.Instance}}"
+                                           Foreground="{Binding Status, Converter={x:Static conv:StatusToBrushConverter.Instance}}"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <ScrollViewer Grid.Row="1" Grid.Column="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="12">
+                <Border Classes="card">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Spacing="6">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="SWITCH NEIGHBOR" Classes="kicker" Foreground="#2EE6D6" VerticalAlignment="Center"/>
+                                <Button Grid.Column="1" Classes="ghost" Padding="6,2" FontSize="10" Content="REFRESH xDP"
+                                        Command="{Binding RefreshSwitchCommand}"
+                                        ToolTip.Tip="Wait for the next LLDP/CDP/EDP advertisement">
+                                    <Button.IsEnabled>
+                                        <MultiBinding Converter="{x:Static conv:BoolAndMultiConverter.Instance}">
+                                            <Binding Path="Session.HasAdapter"/>
+                                            <Binding Path="!IsRunning"/>
+                                            <Binding Path="!IsRefreshingSwitch"/>
+                                        </MultiBinding>
+                                    </Button.IsEnabled>
+                                </Button>
+                            </Grid>
+                            <TextBlock Text="{Binding DiscoveryStatus}" Classes="muted" FontSize="12" TextWrapping="Wrap"/>
+                            <Separator Margin="0,8" Background="#2A3444"/>
+                        </StackPanel>
+                        <StackPanel Spacing="14">
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="SYSTEM NAME" Classes="kicker"/>
+                                <TextBlock Text="{Binding SwitchInfo.SwitchName}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="PORT / VLAN / VOICE VLAN" Classes="kicker"/>
+                                <TextBlock FontSize="15" FontWeight="Bold" Foreground="#FFC44D" TextWrapping="Wrap">
+                                    <Run Text="{Binding SwitchInfo.PortId}"/>
+                                    <Run Text="  ·  VLAN "/>
+                                    <Run Text="{Binding SwitchInfo.VlanId}"/>
+                                    <Run Text="  ·  Voice "/>
+                                    <Run Text="{Binding SwitchInfo.VoiceVlan}"/>
+                                </TextBlock>
+                            </StackPanel>
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="MODEL" Classes="kicker"/>
+                                <TextBlock Text="{Binding SwitchInfo.Model}" Classes="muted" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="MGMT IP" Classes="kicker"/>
+                                <TextBlock Text="{Binding SwitchInfo.ManagementIp}" FontFamily="{StaticResource Mono}"/>
+                            </StackPanel>
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="PoE" Classes="kicker"/>
+                                <TextBlock Text="{Binding SwitchInfo.Poe}" Classes="muted" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <Border Background="#10161F" CornerRadius="8" Padding="10" Margin="0,6,0,0">
+                                <TextBlock Text="{Binding SwitchInfo.ProtocolLabel}" FontSize="11" Foreground="#80CBC4" HorizontalAlignment="Center"/>
+                            </Border>
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <Border Classes="card" IsVisible="{Binding IsContinuous}">
+                    <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="{Binding ContinuousTitle}" Classes="kicker" Foreground="#2EE6D6" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Classes="danger" Padding="8,2" FontSize="10" Content="STOP" Command="{Binding StopContinuousCommand}"/>
+                        </Grid>
+                        <TextBlock Text="{Binding ContinuousStats}" FontFamily="{StaticResource Mono}" FontSize="11" Foreground="#80CBC4" TextWrapping="Wrap"/>
+                        <ItemsControl ItemsSource="{Binding ContinuousSamples}" MaxHeight="220">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:PingSample">
+                                    <Grid ColumnDefinitions="36,*,Auto" Margin="0,1">
+                                        <TextBlock Text="{Binding Sequence}" Classes="muted" FontSize="11" FontFamily="{StaticResource Mono}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Status}" FontSize="11" Classes="muted" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Grid.Column="2" FontSize="11" FontFamily="{StaticResource Mono}"
+                                                   Text="{Binding RoundtripMs, StringFormat='{}{0} ms'}"
+                                                   Foreground="{Binding Success, Converter={x:Static conv:BoolToBrushConverter.Ready}}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

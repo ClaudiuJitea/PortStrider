@@ -1,0 +1,99 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PortStrider.UI.ViewModels"
+             xmlns:conv="using:PortStrider.UI.Converters"
+             xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="PortStrider.UI.Views.ReflectorView"
+             x:DataType="vm:ReflectorViewModel">
+
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="16">
+        <Border Classes="pageHero">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="13">
+                <Border Width="38" Height="38" CornerRadius="9" Background="{StaticResource AccentDimBrush}">
+                    <materialIcons:MaterialIcon Kind="SwapHorizontal" Width="20" Height="20"
+                                                Foreground="{StaticResource AccentBrush}"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                    <TextBlock Text="PACKET REFLECTOR" Classes="kicker" Foreground="{StaticResource AccentBrush}"/>
+                    <TextBlock Text="Create a far-end loopback peer for throughput, loss and packet-integrity tests."
+                               FontSize="12" Classes="muted" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding Status}" Margin="0,4,0,0" FontFamily="{StaticResource Mono}"
+                               FontSize="11" Foreground="{StaticResource AccentBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="SWAP" Classes="kicker"/>
+                        <ComboBox ItemsSource="{Binding SwapModes}" SelectedItem="{Binding SwapMode}" Width="150" IsEnabled="{Binding !IsRunning}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={x:Static conv:EnumLabelConverter.Instance}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="FILTER" Classes="kicker"/>
+                        <ComboBox ItemsSource="{Binding FilterModes}" SelectedItem="{Binding FilterMode}" Width="190" IsEnabled="{Binding !IsRunning}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={x:Static conv:EnumLabelConverter.Instance}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                    <Button Classes="primary" Command="{Binding ToggleCommand}" VerticalAlignment="Bottom"
+                            IsEnabled="{Binding Session.HasAdapter}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <materialIcons:MaterialIcon Kind="SwapHorizontal" Width="16" Height="16"/>
+                            <TextBlock Text="{Binding ButtonLabel}" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*" ColumnSpacing="16">
+            <Border Classes="card">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="REFLECTED RATE" Classes="kicker"/>
+                    <TextBlock Text="{Binding RateLabel}" Classes="metric" Foreground="#3DFFA8"/>
+                    <TextBlock Text="{Binding DurationLabel}" Classes="muted" FontFamily="{StaticResource Mono}"/>
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="1" Classes="card">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="FRAMES REFLECTED" Classes="kicker"/>
+                    <TextBlock Text="{Binding FramesReflected}" Classes="metric"/>
+                    <TextBlock Text="{Binding BytesReflectedLabel}" Classes="muted" FontFamily="{StaticResource Mono}"/>
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="2" Classes="card">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="FRAMES RECEIVED" Classes="kicker"/>
+                    <TextBlock Text="{Binding FramesReceived}" Classes="metric"/>
+                    <TextBlock Text="{Binding BytesReceivedLabel}" Classes="muted" FontFamily="{StaticResource Mono}"/>
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="3" Classes="card">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="FILTERED OUT" Classes="kicker"/>
+                    <TextBlock Text="{Binding FramesFiltered}" Classes="metric" Foreground="#FFC44D"/>
+                    <TextBlock Text="control / non-test frames" Classes="muted" FontSize="11"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="2" Classes="card" VerticalAlignment="Top">
+            <StackPanel Spacing="8">
+                <TextBlock Text="HOW TO USE" Classes="kicker"/>
+                <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                           Text="• MacOnly swaps Ethernet source/destination only — use with a Layer-2 tester. MacAndIp also swaps IPv4/IPv6 addresses and UDP/TCP ports so an IP-based sender receives its own datagrams back (checksums stay valid because the swap is symmetric)."/>
+                <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                           Text="• OwnMac reflects every frame addressed to this NIC except ARP, EAPOL, LLDP/STP. OwnMacAndNetAlly additionally requires IPv4/IPv6 UDP to a port ≥ 1024 (excluding DNS, DHCP, NTP, mDNS, SSDP) — the safe default for iperf3 -u and tester traffic. All reflects everything on the segment not sent by this NIC: use only on an isolated test port."/>
+                <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                           Text="• Example peer: iperf3 -c &lt;this NIC IP&gt; -u -b 900M -l 1400 -t 30 on the other end. The OS on this machine will still see the incoming datagrams (ICMP port-unreachable is suppressed when nothing listens), so prefer running the reflector on a dedicated test NIC."/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
