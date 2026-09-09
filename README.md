@@ -8,18 +8,22 @@ Built with **Avalonia 11** and **.NET 8**. Layer 2 work uses **SharpPcap** and *
 
 ## Download
 
-Pre-built single-file executables are in [`publish/`](publish/). Verify checksums before running:
+**[GitHub Releases](https://github.com/ClaudiuJitea/PortStrider/releases)** — pick the asset for your platform:
+
+| Platform | Release asset |
+| --- | --- |
+| Linux x64 | `PortStrider-linux-x64` |
+| Linux arm64 | `PortStrider-linux-arm64` |
+| Windows x64 | `PortStrider-win-x64.exe` |
+| Windows arm64 | `PortStrider-win-arm64.exe` |
+
+Verify checksums with `SHA256SUMS-supported` from the same release:
 
 ```bash
-cd publish && sha256sum -c SHA256SUMS-supported
+sha256sum -c SHA256SUMS-supported
 ```
 
-| Platform | Path |
-| --- | --- |
-| Linux x64 | [`publish/linux-x64-standalone/PortStrider`](publish/linux-x64-standalone/PortStrider) |
-| Linux arm64 | [`publish/linux-arm64-standalone/PortStrider`](publish/linux-arm64-standalone/PortStrider) |
-| Windows x64 | [`publish/win-x64-standalone/PortStrider.exe`](publish/win-x64-standalone/PortStrider.exe) |
-| Windows arm64 | [`publish/win-arm64-standalone/PortStrider.exe`](publish/win-arm64-standalone/PortStrider.exe) |
+Source-tree copies also live under [`publish/`](publish/) for cloning without using Releases.
 
 On Linux, grant capture capabilities once after download (see [Linux capture privileges](#linux-capture-privileges)).
 
