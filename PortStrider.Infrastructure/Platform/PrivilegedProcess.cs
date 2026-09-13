@@ -7,7 +7,7 @@ namespace PortStrider.Infrastructure.Platform;
 /// <summary>
 /// Runs network-admin commands (ip, ethtool, wpa_supplicant, dhclient) with the privileges available to the process.
 /// On Linux the PortStrider binary normally carries cap_net_raw,cap_net_admin via setcap; those file capabilities are
-/// not inherited by child processes unless raised into the ambient set, which this helper does once. When that is not
+/// not inherited by child processes unless raised into the inheritable and ambient sets on the launching thread. When that is not
 /// possible (or the command still fails with a permission error) it retries through pkexec/sudo.
 /// </summary>
 public static class PrivilegedProcess
@@ -17,7 +17,26 @@ public static class PrivilegedProcess
     private const int CAP_NET_ADMIN = 12;
     private const int CAP_NET_RAW = 13;
 
-    private static readonly Lazy<bool> AmbientRaised = new(TryRaiseAmbientCapabilities);
+    internal const uint NetworkCapabilityMask = (1u << CAP_NET_ADMIN) | (1u << CAP_NET_RAW);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct CapabilityHeader
+    {
+        public uint Version;
+        public int Pid;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct CapabilityData
+    {
+        public uint Effective, Permitted, Inheritable;
+    }
+
+    [DllImport("libc", SetLastError = true)]
+    private static extern int capget(ref CapabilityHeader header, [Out] CapabilityData[] data);
+
+    [DllImport("libc", SetLastError = true)]
+    private static extern int capset(ref CapabilityHeader header, [In] CapabilityData[] data);
 
     [DllImport("libc", SetLastError = true)]
     private static extern int prctl(int option, ulong arg2, ulong arg3, ulong arg4, ulong arg5);
@@ -33,13 +52,45 @@ public static class PrivilegedProcess
     }
 
     /// <summary>True when child processes will inherit CAP_NET_ADMIN/CAP_NET_RAW, or we are root.</summary>
-    public static bool HasAmbientNetCapabilities => IsRoot || AmbientRaised.Value;
+    public static bool HasAmbientNetCapabilities => IsRoot || TryRaiseAmbientCapabilities();
+
+    public static bool HasEffectiveNetCapabilities
+    {
+        get
+        {
+            if (!HostOs.IsLinux) return false;
+            try
+            {
+                var header = new CapabilityHeader { Version = 0x20080522 }; // Linux capability ABI v3, current thread
+                var data = new CapabilityData[2];
+                return capget(ref header, data) == 0 && (data[0].Effective & NetworkCapabilityMask) == NetworkCapabilityMask;
+            }
+            catch { return false; }
+        }
+    }
+
+    internal static CapabilityData AddNetworkInheritance(CapabilityData data)
+    {
+        // Never add capabilities that this thread has not already been granted.
+        data.Inheritable |= data.Permitted & NetworkCapabilityMask;
+        return data;
+    }
 
     public static bool TryRaiseAmbientCapabilities()
     {
         if (!HostOs.IsLinux) return false;
         try
         {
+            var header = new CapabilityHeader { Version = 0x20080522 };
+            var data = new CapabilityData[2];
+            if (capget(ref header, data) != 0 || (data[0].Permitted & NetworkCapabilityMask) != NetworkCapabilityMask)
+                return false;
+            if ((data[0].Inheritable & NetworkCapabilityMask) != NetworkCapabilityMask)
+            {
+                data[0] = AddNetworkInheritance(data[0]);
+                if (capset(ref header, data) != 0) return false;
+            }
+            // Capabilities are per thread: do not cache this result across async continuations.
             var admin = prctl(PR_CAP_AMBIENT, PR_CAP_AMBIENT_RAISE, CAP_NET_ADMIN, 0, 0);
             var raw = prctl(PR_CAP_AMBIENT, PR_CAP_AMBIENT_RAISE, CAP_NET_RAW, 0, 0);
             return admin == 0 && raw == 0;
@@ -63,7 +114,7 @@ public static class PrivilegedProcess
         if (resolved is null)
             return new Result(127, "", $"{file}: command not found", file);
 
-        _ = AmbientRaised.Value;
+        _ = HasAmbientNetCapabilities;
         var direct = await ExecuteAsync(resolved, args, cancellationToken, timeout);
         if (direct.Success || !HostOs.IsLinux || IsRoot || !LooksLikePermissionError(direct))
             return direct;
@@ -76,7 +127,7 @@ public static class PrivilegedProcess
     public static Command Build(string file, IReadOnlyList<string> args)
     {
         var resolved = ProcessUtil.FindCommand(file) ?? file;
-        _ = AmbientRaised.Value;
+        _ = HasAmbientNetCapabilities;
         if (!HostOs.IsLinux || IsRoot || HasAmbientNetCapabilities)
             return Cli.Wrap(resolved).WithArguments(args).WithValidation(CommandResultValidation.None);
 
@@ -127,6 +178,7 @@ public static class PrivilegedProcess
         {
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             cts.CancelAfter(timeout ?? TimeSpan.FromSeconds(30));
+            _ = HasAmbientNetCapabilities;
             var result = await Cli.Wrap(file)
                 .WithArguments(args)
                 .WithValidation(CommandResultValidation.None)

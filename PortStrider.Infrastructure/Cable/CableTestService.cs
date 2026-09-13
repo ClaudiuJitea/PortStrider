@@ -3,6 +3,7 @@ using PortStrider.Core.Enums;
 using PortStrider.Core.Models;
 using PortStrider.Core.Services;
 using PortStrider.Infrastructure.Platform;
+using PortStrider.Infrastructure.Adapters;
 
 namespace PortStrider.Infrastructure.Cable;
 
@@ -49,6 +50,8 @@ public sealed class CableTestService : ICableTestService
         progress.Report("Querying link partner…");
         var settings = await ProcessUtil.RunAsync("ethtool", [adapterName], cancellationToken);
         var settingsText = settings?.StandardOutput ?? "";
+        var parsedSettings = EthtoolSettings.Parse(settingsText);
+        var phy = ToPhyInfo(parsedSettings);
 
         progress.Report("Starting TDR / cable test (may take ~10s)…");
         var tdr = await ProcessUtil.RunAsync("ethtool", ["--cable-test", adapterName], cancellationToken)
@@ -62,8 +65,11 @@ public sealed class CableTestService : ICableTestService
             return new CableTestResult
             {
                 Supported = false,
-                Summary = "This NIC/driver does not expose cable test (common on USB and many consumer adapters).",
-                RawOutput = raw.Trim()
+                Summary = parsedSettings.LinkDetected is true
+                    ? $"Link is up at {phy.SpeedLabel} {phy.Duplex.ToLowerInvariant()} duplex; this NIC/driver does not expose pair-level TDR."
+                    : "This NIC/driver does not expose pair-level TDR (common on USB and many consumer adapters).",
+                RawOutput = raw.Trim(),
+                Phy = phy
             };
         }
 
@@ -76,9 +82,24 @@ public sealed class CableTestService : ICableTestService
                 ? "Pairs look healthy (or driver reported completion)."
                 : $"{bad.Length} pair(s) reported a fault",
             Pairs = pairs,
-            RawOutput = raw.Trim()
+            RawOutput = raw.Trim(),
+            Phy = phy
         };
     }
+
+    internal static CablePhyInfo ToPhyInfo(EthtoolSettings settings) => new()
+    {
+        LinkDetected = settings.LinkDetected,
+        SpeedMbps = settings.SpeedMbps,
+        SpeedLabel = EthtoolSettings.FormatMbps(settings.SpeedMbps),
+        Duplex = string.IsNullOrWhiteSpace(settings.Duplex) ? "—" : settings.Duplex,
+        AutoNegotiation = string.IsNullOrWhiteSpace(settings.AutoNegotiation) ? "—" : settings.AutoNegotiation,
+        MdiX = string.IsNullOrWhiteSpace(settings.MdiX) ? "—" : settings.MdiX,
+        Port = string.IsNullOrWhiteSpace(settings.Port) ? "—" : settings.Port,
+        LocalMaximum = EthtoolSettings.FormatMbps(settings.AdvertisedMaxMbps > 0 ? settings.AdvertisedMaxMbps : settings.SupportedMaxMbps),
+        PartnerMaximum = EthtoolSettings.FormatMbps(settings.PartnerMaxMbps),
+        IsDownshift = settings.IsDownshift
+    };
 
     private static List<CablePairResult> ParsePairs(string text, CableUnit unit)
     {

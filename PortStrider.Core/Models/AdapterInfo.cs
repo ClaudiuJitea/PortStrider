@@ -75,4 +75,6 @@ public sealed class InterfaceRates
     public long TxDropped { get; init; }
     public string RxLabel => $"{RxMbps:0.00} Mbps ↓";
     public string TxLabel => $"{TxMbps:0.00} Mbps ↑";
+    public string RxValueLabel => $"{RxMbps:0.00} Mbps";
+    public string TxValueLabel => $"{TxMbps:0.00} Mbps";
 }

@@ -35,6 +35,7 @@ public partial class MainViewModel : ViewModelBase
     public VlanMonitorViewModel VlanMonitor { get; }
     public CapabilitiesViewModel Capabilities { get; }
     public PreFlightViewModel PreFlight { get; }
+    public WifiViewModel Wifi { get; }
     public ObservableCollection<NavItem> NavItems { get; } = new();
 
     public MainViewModel(
@@ -50,7 +51,8 @@ public partial class MainViewModel : ViewModelBase
         ProfilesViewModel profiles,
         VlanMonitorViewModel vlanMonitor,
         CapabilitiesViewModel capabilities,
-        PreFlightViewModel preFlight)
+        PreFlightViewModel preFlight,
+        WifiViewModel wifi)
     {
         Session = session;
         AutoTest = autoTest;
@@ -65,10 +67,12 @@ public partial class MainViewModel : ViewModelBase
         VlanMonitor = vlanMonitor;
         Capabilities = capabilities;
         PreFlight = preFlight;
+        Wifi = wifi;
 
         NavItems.Add(new NavItem { Section = AppSection.AutoTest, Label = "AutoTest", Caption = "Profile-driven", Icon = MaterialIconKind.Speedometer });
         NavItems.Add(new NavItem { Section = AppSection.Switch, Label = "Switch", Caption = "CDP / LLDP / EDP", Icon = MaterialIconKind.LanConnect });
         NavItems.Add(new NavItem { Section = AppSection.Capture, Label = "Capture", Caption = "Stream to PCAP", Icon = MaterialIconKind.Radar });
+        NavItems.Add(new NavItem { Section = AppSection.Wifi, Label = "WiFi", Caption = "Spectrum analyzer", Icon = MaterialIconKind.Wifi });
         NavItems.Add(new NavItem { Section = AppSection.VlanMonitor, Label = "VLAN", Caption = "Top 9 traffic", Icon = MaterialIconKind.ChartPie });
         NavItems.Add(new NavItem { Section = AppSection.Tools, Label = "Tools", Caption = "Ping · iperf3", Icon = MaterialIconKind.HammerWrench });
         NavItems.Add(new NavItem { Section = AppSection.Reflector, Label = "Reflector", Caption = "Loopback peer", Icon = MaterialIconKind.SwapHorizontal });
@@ -122,6 +126,7 @@ public partial class MainViewModel : ViewModelBase
             AppSection.VlanMonitor => VlanMonitor,
             AppSection.Capabilities => Capabilities,
             AppSection.PreFlight => PreFlight,
+            AppSection.Wifi => Wifi,
             _ => AutoTest
         };
         if (value.Section == AppSection.AutoTest) AutoTest.ReloadProfiles();

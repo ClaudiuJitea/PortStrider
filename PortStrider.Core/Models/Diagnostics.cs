@@ -96,6 +96,27 @@ public sealed class CablePairResult
     public required string Pair { get; init; }
     public required string Status { get; init; }
     public string? Distance { get; init; }
+    public bool IsHealthy => Status.Contains("OK", StringComparison.OrdinalIgnoreCase)
+                             || Status.Contains("normal", StringComparison.OrdinalIgnoreCase);
+    public bool IsOpen => Status.Contains("open", StringComparison.OrdinalIgnoreCase);
+    public bool IsShort => Status.Contains("short", StringComparison.OrdinalIgnoreCase);
+    public string StateLabel => IsHealthy ? "PASS" : IsOpen ? "OPEN" : IsShort ? "SHORT" : "CHECK";
+}
+
+public sealed class CablePhyInfo
+{
+    public bool? LinkDetected { get; init; }
+    public long SpeedMbps { get; init; }
+    public string SpeedLabel { get; init; } = "—";
+    public string Duplex { get; init; } = "—";
+    public string AutoNegotiation { get; init; } = "—";
+    public string MdiX { get; init; } = "—";
+    public string Port { get; init; } = "—";
+    public string LocalMaximum { get; init; } = "—";
+    public string PartnerMaximum { get; init; } = "—";
+    public bool IsDownshift { get; init; }
+    public string LinkLabel => LinkDetected switch { true => "LINK UP", false => "LINK DOWN", _ => "UNKNOWN" };
+    public string NegotiationLabel => string.Equals(AutoNegotiation, "on", StringComparison.OrdinalIgnoreCase) ? "AUTO" : AutoNegotiation.ToUpperInvariant();
 }
 
 public sealed class CableTestResult
@@ -104,6 +125,10 @@ public sealed class CableTestResult
     public string Summary { get; init; } = "";
     public IReadOnlyList<CablePairResult> Pairs { get; init; } = [];
     public string RawOutput { get; init; } = "";
+    public CablePhyInfo Phy { get; init; } = new();
+    public bool HasPairs => Pairs.Count > 0;
+    public bool LinkUp => Phy.LinkDetected is true;
+    public string TdrLabel => Supported ? "PAIR TEST COMPLETE" : "TDR NOT EXPOSED";
 }
 
 public sealed class NeighborEntry

@@ -1,0 +1,179 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PortStrider.UI.ViewModels"
+             xmlns:charts="using:PortStrider.UI.Controls"
+             xmlns:models="using:PortStrider.Core.Models"
+             xmlns:conv="using:PortStrider.UI.Converters"
+             xmlns:icons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="PortStrider.UI.Views.WifiView" x:DataType="vm:WifiViewModel">
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="12">
+            <Border Classes="pageHero">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="13">
+                    <Border Width="42" Height="42" CornerRadius="12" Background="{StaticResource AccentDimBrush}">
+                        <icons:MaterialIcon Kind="Wifi" Width="25" Height="25" Foreground="{StaticResource AccentBrush}"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" Spacing="3">
+                        <TextBlock Text="WIFI SPECTRUM ANALYZER" FontSize="18" FontWeight="SemiBold"/>
+                        <TextBlock Text="Explore channel overlap and signal strength across your wireless environment." Classes="muted" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Border Grid.Column="2" Classes="badge" VerticalAlignment="Center">
+                        <TextBlock Text="2.4 / 5 / 6 GHz" Foreground="{StaticResource AccentBrush}" FontSize="11"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <Border Classes="toolbarCard">
+                <StackPanel Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <TextBlock Text="BAND" Classes="kicker" VerticalAlignment="Center"/>
+                            <ComboBox ItemsSource="{Binding Bands}" SelectedItem="{Binding SelectedBand}" MinWidth="125"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                            <Button Classes="secondary" Content="SCAN ONCE" Command="{Binding ScanCommand}"/>
+                            <Button Classes="primary" Command="{Binding StartCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="7">
+                                    <icons:MaterialIcon Kind="Radar" Width="17" Height="17"/>
+                                    <TextBlock Text="LIVE SCAN"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Classes="danger" Content="STOP" Command="{Binding StopCommand}" IsEnabled="{Binding IsRunning}"/>
+                        </StackPanel>
+                    </Grid>
+                    <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsRunning}" Height="2" Foreground="{StaticResource AccentBrush}"/>
+                    <TextBlock Text="{Binding Status}" Foreground="{StaticResource AccentBrush}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding LastScan}" Classes="muted" FontSize="11"/>
+                </StackPanel>
+            </Border>
+
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                <Border Classes="inset"><StackPanel Spacing="4">
+                    <TextBlock Text="ACCESS POINTS IN BAND" Classes="kicker"/>
+                    <TextBlock Text="{Binding Networks.Count}" Classes="metric"/>
+                </StackPanel></Border>
+                <Border Grid.Column="1" Classes="inset"><StackPanel Spacing="4">
+                    <TextBlock Text="PRIMARY CHANNELS SEEN" Classes="kicker"/>
+                    <TextBlock Text="{Binding ChannelCount}" Classes="metric"/>
+                </StackPanel></Border>
+                <Border Grid.Column="2" Classes="inset"><StackPanel Spacing="4">
+                    <TextBlock Text="STRONGEST SIGNAL" Classes="kicker"/>
+                    <TextBlock Text="{Binding StrongestSignal}" Classes="metric" Foreground="{StaticResource AccentBrush}"/>
+                    <TextBlock Text="{Binding StrongestName}" Classes="muted" FontSize="11" TextTrimming="CharacterEllipsis"/>
+                </StackPanel></Border>
+            </Grid>
+
+            <Border Classes="card"><StackPanel Spacing="10">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="CHANNEL OVERLAP" Classes="kicker"/>
+                    <TextBlock Grid.Column="1" Text="{Binding SelectedBand}" Foreground="{StaticResource AccentBrush}" FontSize="12"/>
+                </Grid>
+                <WrapPanel Orientation="Horizontal">
+                    <Button Classes="ghost" Content="+" Click="ZoomIn" ToolTip.Tip="Zoom in" Margin="0,0,6,6"/>
+                    <Button Classes="ghost" Content="−" Click="ZoomOut" ToolTip.Tip="Zoom out" Margin="0,0,6,6"/>
+                    <Button Classes="ghost" Content="FIT NETWORKS" Click="FitNetworks" Margin="0,0,6,6"/>
+                    <Button Classes="ghost" Content="FULL BAND" Click="FullBand" Margin="0,0,6,6"/>
+                    <Button Classes="ghost" Content="FOCUS SELECTED" Click="FocusSelected" IsEnabled="{Binding HasSelection}" Margin="0,0,6,6"/>
+                    <Button Classes="ghost" Content="SELECT STRONGEST" Command="{Binding SelectStrongestCommand}" IsEnabled="{Binding HasNetworks}" Margin="0,0,0,6"/>
+                </WrapPanel>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <TextBlock Text="INSPECT SSID" Classes="kicker" VerticalAlignment="Center"/>
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding Networks}" SelectedItem="{Binding SelectedNetwork, Mode=TwoWay}"
+                              HorizontalAlignment="Stretch" IsEnabled="{Binding HasNetworks}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:WifiNetwork">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Ellipse Width="9" Height="9" Fill="{Binding Key, Converter={x:Static conv:WifiColorConverter.Instance}}"/>
+                                    <TextBlock Text="{Binding Name}" MaxWidth="280" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding Channel, StringFormat='Ch {0}'}" Classes="muted"/>
+                                    <TextBlock Text="{Binding SignalLabel}" Classes="muted"/>
+                                    <TextBlock Text="{Binding Bssid}" Classes="muted" FontSize="11"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Grid>
+                <charts:WifiChart x:Name="SpectrumChart" Height="285" Focusable="True" Networks="{Binding Networks}" Band="{Binding SelectedBand}"
+                                  SelectedKey="{Binding SelectedKey}"/>
+                <TextBlock Text="Scroll over the graph to zoom · drag to pan · click near a curve's signal level to inspect it · repeat a click to cycle coincident curves"
+                           Foreground="{StaticResource AccentBrush}" FontSize="11" TextWrapping="Wrap"/>
+                <TextBlock Text="Curves illustrate scanned access points, not measured RF energy. Unknown widths use a 20 MHz guide; non-WiFi interference and noise are not measured."
+                           Classes="muted" FontSize="11" TextWrapping="Wrap"/>
+            </StackPanel></Border>
+
+            <Border Classes="card"><StackPanel Spacing="10">
+                <TextBlock Text="SELECTED ACCESS POINT" Classes="kicker"/>
+                <TextBlock IsVisible="{Binding !HasSelection}" Text="Select a curve, an SSID, or a table row to inspect an access point." Classes="muted"/>
+                <StackPanel IsVisible="{Binding HasSelection}" Spacing="10">
+                    <TextBlock Text="{Binding InspectedNetwork.Name}" FontSize="18" FontWeight="SemiBold"
+                               Foreground="{Binding SelectedKey, Converter={x:Static conv:WifiColorConverter.Instance}}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding SignalRank}" Foreground="{StaticResource AccentBrush}"/>
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="14">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="SIGNAL / SECURITY" Classes="kicker"/>
+                            <TextBlock Text="{Binding InspectedNetwork.SignalLabel}" Classes="metric"/>
+                            <TextBlock Text="{Binding InspectedNetwork.Security}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="4">
+                            <TextBlock Text="CHANNEL / WIDTH" Classes="kicker"/>
+                            <TextBlock Text="{Binding InspectedNetwork.Channel, StringFormat='Channel {0}'}" Classes="metric"/>
+                            <TextBlock Text="{Binding InspectedNetwork.WidthLabel}"/>
+                            <TextBlock Text="{Binding InspectedNetwork.FrequencyMhz, StringFormat='Primary {0} MHz'}" Classes="muted" FontSize="11"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Spacing="4">
+                            <TextBlock Text="BSSID / LAST SEEN" Classes="kicker"/>
+                            <TextBlock Text="{Binding InspectedNetwork.Bssid}" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding LastSeen}" Classes="muted"/>
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock Text="{Binding Footprint}" Classes="muted" FontSize="11" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding OverlapSummary}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    <ItemsControl ItemsSource="{Binding OverlappingNetworks}" MaxHeight="110">
+                        <ItemsControl.Template>
+                            <ControlTemplate><ScrollViewer><ItemsPresenter/></ScrollViewer></ControlTemplate>
+                        </ItemsControl.Template>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:WifiNetwork">
+                                <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,2">
+                                    <Ellipse Width="8" Height="8" Fill="{Binding Key, Converter={x:Static conv:WifiColorConverter.Instance}}"/>
+                                    <TextBlock Text="{Binding Name}" Width="180" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding Channel, StringFormat='Ch {0}'}" Width="55" Classes="muted"/>
+                                    <TextBlock Text="{Binding SignalLabel}" Width="70" Classes="muted"/>
+                                    <TextBlock Text="{Binding Bssid}" FontSize="11" Classes="muted"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="Overlap estimates use channel widths (20 MHz when unknown). Signal rank does not measure speed, airtime, or Internet quality."
+                               Classes="muted" FontSize="11" TextWrapping="Wrap"/>
+                </StackPanel>
+            </StackPanel></Border>
+
+            <Border Classes="card"><StackPanel Spacing="8">
+                <TextBlock Text="SIGNAL OVER TIME" Classes="kicker"/>
+                <TextBlock Text="{Binding HistoryTitle}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="{Binding SignalRange}" Classes="muted" FontSize="11"/>
+                <charts:WifiChart Height="170" IsHistory="True" History="{Binding History}" SelectedKey="{Binding SelectedKey}"/>
+                <TextBlock Text="Last 60 scans · gaps mean the access point was not observed · live scans pause 5 seconds between sweeps"
+                           Classes="muted" FontSize="11" TextWrapping="Wrap"/>
+            </StackPanel></Border>
+
+            <TextBlock Text="NEARBY ACCESS POINTS" Classes="kicker" Margin="2,4,0,0"/>
+            <DataGrid ItemsSource="{Binding Networks}" SelectedItem="{Binding SelectedNetwork}" Height="260"
+                      IsReadOnly="True" AutoGenerateColumns="False" SelectionMode="Single"
+                      CanUserSortColumns="True" CanUserResizeColumns="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="NETWORK / SSID" Binding="{Binding Name}" Width="*" MinWidth="150"/>
+                    <DataGridTextColumn Header="BSSID" Binding="{Binding Bssid}" Width="160"/>
+                    <DataGridTextColumn Header="CH" Binding="{Binding Channel}" Width="80"/>
+                    <DataGridTextColumn Header="MHz" Binding="{Binding FrequencyMhz}" Width="90"/>
+                    <DataGridTextColumn Header="SIGNAL" Binding="{Binding SignalLabel}" SortMemberPath="SignalDbm" Width="100"/>
+                    <DataGridTextColumn Header="WIDTH" Binding="{Binding WidthLabel}" Width="100"/>
+                    <DataGridTextColumn Header="SECURITY" Binding="{Binding Security}" Width="150"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <TextBlock IsVisible="{Binding !HasNetworks}" Text="No access points in this band. Run a scan or choose another band."
+                       Classes="muted" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

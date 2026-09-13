@@ -25,8 +25,17 @@ public partial class CableViewModel : ViewModelBase
     public AppSession Session => _session;
     public bool HasResult => Result is not null;
     public bool HasSfpResult => SfpResult is not null;
+    public bool HasPairs => Result?.HasPairs is true;
+    public bool HasUnsupportedResult => Result is { Supported: false };
+    public bool LinkUp => Result?.LinkUp is true;
 
-    partial void OnResultChanged(CableTestResult? value) => OnPropertyChanged(nameof(HasResult));
+    partial void OnResultChanged(CableTestResult? value)
+    {
+        OnPropertyChanged(nameof(HasResult));
+        OnPropertyChanged(nameof(HasPairs));
+        OnPropertyChanged(nameof(HasUnsupportedResult));
+        OnPropertyChanged(nameof(LinkUp));
+    }
     partial void OnSfpResultChanged(SfpDiagnostics? value) => OnPropertyChanged(nameof(HasSfpResult));
 
     public CableViewModel(ICableTestService cable, ISfpDiagnosticsService sfp, AppSession session)

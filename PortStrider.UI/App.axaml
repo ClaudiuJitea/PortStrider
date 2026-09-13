@@ -7,6 +7,9 @@
              xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              RequestedThemeVariant="Dark">
     <Application.DataTemplates>
+        <DataTemplate DataType="vm:WifiViewModel">
+            <views:WifiView />
+        </DataTemplate>
         <DataTemplate DataType="vm:AutoTestViewModel">
             <views:AutoTestView />
         </DataTemplate>

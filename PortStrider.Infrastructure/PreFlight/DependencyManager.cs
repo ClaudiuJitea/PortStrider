@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Net.NetworkInformation;
 using System.Security.Principal;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -10,6 +11,9 @@ using PortStrider.Core.Models;
 using PortStrider.Core.Services;
 using PortStrider.Infrastructure.Platform;
 using SharpPcap;
+using PortStrider.Infrastructure.Wifi;
+using PortStrider.Infrastructure.Adapters;
+using PortStrider.Core.Enums;
 
 namespace PortStrider.Infrastructure.PreFlight;
 
@@ -45,7 +49,9 @@ public sealed class DependencyManager : IPreFlightService
             CheckIperf3Async(cancellationToken),
             CheckCableToolAsync(cancellationToken),
             CheckTraceToolAsync(cancellationToken),
-            CheckPrivilegesAsync(cancellationToken)
+            CheckPrivilegesAsync(cancellationToken),
+            CheckWifiToolsAsync(cancellationToken),
+            Task.Run(CheckWifiRadio, cancellationToken)
         };
         return await Task.WhenAll(checks);
     }
@@ -63,6 +69,7 @@ public sealed class DependencyManager : IPreFlightService
                 "iperf3" => "iperf3",
                 "ethtool" => "ethtool",
                 "trace" => "traceroute",
+                "wifi-tools" => "iw",
                 _ => null
             };
             if (package is null) return false;
@@ -132,6 +139,49 @@ public sealed class DependencyManager : IPreFlightService
         };
     }
 
+    private async Task<DependencyStatus> CheckWifiToolsAsync(CancellationToken cancellationToken)
+    {
+        var ready = IsWindows || (IsLinux && await ProcessUtil.CommandExistsAsync("iw", cancellationToken));
+        return new DependencyStatus
+        {
+            Id = "wifi-tools", Name = "WiFi scan tools", IsReady = ready,
+            Details = IsWindows ? "Native Windows WLAN API · no Npcap required for WiFi scans"
+                : ready ? "iw available · active scans use CAP_NET_ADMIN (see Capture privileges)"
+                : IsLinux ? "Install iw for WiFi channel and signal scans" : "WiFi scanning supports Linux and Windows",
+            CanAutoFix = IsLinux, FixHint = "Install iw"
+        };
+    }
+
+    private DependencyStatus CheckWifiRadio()
+    {
+        try
+        {
+            string details;
+            if (IsWindows) details = WindowsWifi.CheckReadiness();
+            else if (IsLinux)
+            {
+                var radios = NetworkInterface.GetAllNetworkInterfaces()
+                    .Where(a => AdapterMediaClassifier.Classify(a) == LinkMediaKind.WiFi).ToArray();
+                if (radios.Length == 0) throw new InvalidOperationException("No WiFi adapter detected. Connect a WiFi adapter and install its driver/firmware.");
+                var switches = Directory.Exists("/sys/class/rfkill") ? Directory.GetDirectories("/sys/class/rfkill") : [];
+                var wlanSwitches = switches.Where(p => File.Exists(Path.Combine(p, "type"))
+                    && File.ReadAllText(Path.Combine(p, "type")).Trim() == "wlan").ToArray();
+                bool Blocked(string p) => new[] { "soft", "hard" }.Any(name => File.Exists(Path.Combine(p, name))
+                    && File.ReadAllText(Path.Combine(p, name)).Trim() == "1");
+                if (wlanSwitches.Length > 0 && wlanSwitches.All(Blocked))
+                    throw new InvalidOperationException("WiFi is blocked by airplane mode or a hardware switch. Enable the radio before scanning.");
+                details = $"WiFi adapter detected: {string.Join(", ", radios.Select(a => a.Name))} · scan support depends on driver and radio state";
+            }
+            else throw new InvalidOperationException("WiFi scanning supports Linux and Windows.");
+            return new DependencyStatus { Id = "wifi-radio", Name = "WiFi adapter / radio access", IsReady = true, Details = details, CanAutoFix = false };
+        }
+        catch (Exception ex)
+        {
+            return new DependencyStatus { Id = "wifi-radio", Name = "WiFi adapter / radio access", IsReady = false,
+                Details = ex.Message, CanAutoFix = false, FixHint = "Check WiFi hardware, driver, radio switch, and OS permissions" };
+        }
+    }
+
     private async Task<DependencyStatus> CheckIperf3Async(CancellationToken cancellationToken)
     {
         var installed = await ProcessUtil.CommandExistsAsync("iperf3", cancellationToken);
@@ -194,11 +244,17 @@ public sealed class DependencyManager : IPreFlightService
     {
         var admin = HasAdminPrivileges();
         var hasCaps = IsLinux && await HasLinuxCaptureCapsAsync(cancellationToken);
-        var ready = admin || hasCaps;
+        var activeCaps = IsLinux && PrivilegedProcess.HasEffectiveNetCapabilities;
+        var inheritedCaps = IsLinux && PrivilegedProcess.HasAmbientNetCapabilities;
+        var ready = admin || (activeCaps && inheritedCaps);
         var details = admin
             ? "Running with elevated privileges"
-            : hasCaps
-                ? "Linux capabilities detected on PortStrider binary"
+            : activeCaps && inheritedCaps
+                ? "Network capabilities active · child commands can inherit WiFi scan privileges"
+                : activeCaps
+                    ? "Network capabilities active, but child-command inheritance is blocked by the OS"
+                    : hasCaps
+                        ? "Capabilities saved on the executable · close and reopen PortStrider to activate them"
                 : IsLinux
                     ? "Raw capture needs CAP_NET_RAW / CAP_NET_ADMIN (setcap) or root"
                     : "Launch PortStrider as Administrator for NDIS packet filters";
@@ -209,12 +265,14 @@ public sealed class DependencyManager : IPreFlightService
             Name = "Capture privileges",
             IsReady = ready,
             Details = details,
-            CanAutoFix = (IsLinux
+            CanAutoFix = (IsLinux && !hasCaps
                           && ProcessUtil.FindCommand("setcap") is not null
                           && (admin || ProcessUtil.FindCommand("pkexec") is not null))
                          || (IsWindows && !admin),
             FixHint = IsLinux
-                ? "Click Repair to grant capture capabilities to this PortStrider binary"
+                ? hasCaps && !ready
+                    ? "Restart the standalone executable; if still blocked, check launcher restrictions (NoNewPrivileges / capability bounding set)"
+                    : "Click Repair to grant capture and WiFi scan capabilities to this PortStrider binary"
                 : "Click Repair to relaunch PortStrider as Administrator"
         };
     }
@@ -290,7 +348,7 @@ public sealed class DependencyManager : IPreFlightService
 
             var ready = await HasLinuxCaptureCapsAsync(cancellationToken);
             progress.Report(ready
-                ? "Capture privileges enabled. Packet capture is ready."
+                ? "Capabilities saved. Close and reopen PortStrider to activate capture and WiFi scan privileges."
                 : "Capabilities were not retained by the executable's filesystem.");
             return ready;
         }
@@ -438,7 +496,7 @@ public sealed class DependencyManager : IPreFlightService
 
             using (var http = new HttpClient { Timeout = TimeSpan.FromMinutes(2) })
             {
-                http.DefaultRequestHeaders.UserAgent.ParseAdd("PortStrider/1.0");
+                http.DefaultRequestHeaders.UserAgent.ParseAdd("PortStrider/1.1");
                 foreach (var url in WindowsIperfUrls)
                 {
                     try

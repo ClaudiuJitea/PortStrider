@@ -30,32 +30,48 @@
 
         <!-- Top toolbar -->
         <Border Grid.Row="0" Grid.Column="1" Background="#0E131B" BorderBrush="#1A2230" BorderThickness="0,0,0,1">
-            <Grid ColumnDefinitions="*,Auto" Margin="14,0">
-                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                    <TextBlock Text="ADAPTER" Classes="kicker" VerticalAlignment="Center"/>
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="18" Margin="14,0" Height="34" VerticalAlignment="Center">
+                <Grid ColumnDefinitions="Auto,220,40" ColumnSpacing="10">
+                    <TextBlock Text="ADAPTER" Classes="kicker" LineHeight="16" VerticalAlignment="Center"/>
                     <ComboBox Classes="toolbar"
+                              Grid.Column="1"
+                              Height="34"
+                              MinWidth="220"
+                              VerticalContentAlignment="Center"
                               ItemsSource="{Binding Session.Adapters}"
                               SelectedItem="{Binding Session.SelectedAdapter}">
                         <ComboBox.ItemTemplate>
                             <DataTemplate x:DataType="models:AdapterInfo">
-                                <TextBlock Text="{Binding DisplayLabel}"/>
+                                <TextBlock Text="{Binding DisplayLabel}" LineHeight="18" VerticalAlignment="Center"/>
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
-                    <Button Classes="ghost" Command="{Binding RefreshAdaptersCommand}"
+                    <Button Grid.Column="2" Classes="ghost" Command="{Binding RefreshAdaptersCommand}"
+                            Width="40" Height="34" Padding="0"
                             IsEnabled="{Binding !Session.IsScanning}" ToolTip.Tip="Rescan NICs">
-                        <materialIcons:MaterialIcon Kind="RefreshCircle" Width="18" Height="18"/>
+                        <materialIcons:MaterialIcon Kind="RefreshCircle" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Button>
-                </StackPanel>
+                </Grid>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding Session.Rates.RxLabel, FallbackValue='0.00 Mbps ↓'}"
-                               Foreground="{StaticResource OkBrush}" FontFamily="{StaticResource Mono}" FontSize="11"/>
-                    <TextBlock Text="{Binding Session.Rates.TxLabel, FallbackValue='0.00 Mbps ↑'}"
-                               Foreground="{StaticResource BlueBrush}" FontFamily="{StaticResource Mono}" FontSize="11"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" Height="34" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="3" Height="26" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Session.Rates.RxValueLabel, FallbackValue='0.00 Mbps'}"
+                                   Foreground="{StaticResource OkBrush}" FontFamily="{StaticResource Mono}" FontSize="11"
+                                   LineHeight="16" VerticalAlignment="Center"/>
+                        <materialIcons:MaterialIcon Kind="ArrowDown" Width="12" Height="12"
+                                                    Foreground="{StaticResource OkBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="3" Height="26" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Session.Rates.TxValueLabel, FallbackValue='0.00 Mbps'}"
+                                   Foreground="{StaticResource BlueBrush}" FontFamily="{StaticResource Mono}" FontSize="11"
+                                   LineHeight="16" VerticalAlignment="Center"/>
+                        <materialIcons:MaterialIcon Kind="ArrowUp" Width="12" Height="12"
+                                                    Foreground="{StaticResource BlueBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
                     <Border Background="#171E28" BorderBrush="{StaticResource BorderBrushSoft}"
-                            BorderThickness="1" CornerRadius="7" Padding="8,4">
-                        <TextBlock FontFamily="{StaticResource Mono}" FontSize="10" Foreground="{StaticResource MutedBrush}">
+                            BorderThickness="1" CornerRadius="7" Height="26" Padding="8,0" VerticalAlignment="Center">
+                        <TextBlock FontFamily="{StaticResource Mono}" FontSize="10" Foreground="{StaticResource MutedBrush}"
+                                   LineHeight="14" VerticalAlignment="Center">
                             <Run Text="ERR "/><Run Text="{Binding Session.Rates.RxErrors, FallbackValue=0}"/>
                             <Run Text="/"/><Run Text="{Binding Session.Rates.TxErrors, FallbackValue=0}"/>
                             <Run Text="  DROP "/><Run Text="{Binding Session.Rates.RxDropped, FallbackValue=0}"/>

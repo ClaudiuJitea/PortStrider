@@ -11,6 +11,7 @@ using PortStrider.Infrastructure.Probes;
 using PortStrider.Infrastructure.Profiles;
 using PortStrider.Infrastructure.Reports;
 using PortStrider.Infrastructure.Sniffing;
+using PortStrider.Infrastructure.Wifi;
 using PortStrider.UI.ViewModels;
 using PortStrider.UI.Views;
 
@@ -65,11 +66,13 @@ public partial class App : Application
                     new ProfilesViewModel(profiles, session),
                     new VlanMonitorViewModel(vlanMonitor, session),
                     new CapabilitiesViewModel(capabilities, session),
-                    new PreFlightViewModel(preflight));
+                    new PreFlightViewModel(preflight),
+                    new WifiViewModel(new WifiService(), session));
 
                 desktop.MainWindow = new MainWindow { DataContext = vm };
                 desktop.Exit += (_, _) =>
                 {
+                    vm.Wifi.Stop();
                     capture.Dispose();
                     vlanMonitor.Dispose();
                     reflector.Dispose();

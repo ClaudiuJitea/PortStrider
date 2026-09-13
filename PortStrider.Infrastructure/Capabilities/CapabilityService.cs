@@ -11,6 +11,11 @@ public sealed class CapabilityService : ICapabilityService
         var features = new List<FeatureCapability>
         {
             Feature("link", "Physical link", CapabilityLevel.Supported, "Uses host NIC link state."),
+            Feature("wifi", "WiFi spectrum / channel analyzer", adapter.Media == LinkMediaKind.WiFi
+                    && (OperatingSystem.IsWindows() || OperatingSystem.IsLinux() && HasTool("iw"))
+                    ? CapabilityLevel.Degraded : CapabilityLevel.Unavailable,
+                "Scanned access-point channels and RSSI; band support depends on the radio. Does not measure raw RF energy or non-WiFi interference.",
+                "Select a WiFi adapter; Linux needs iw and CAP_NET_ADMIN; Windows needs WLAN AutoConfig and location access."),
             Feature("lldp", "LLDP/CDP/EDP discovery", adapter.PcapName is null ? CapabilityLevel.Degraded : CapabilityLevel.Supported,
                 adapter.PcapName is null ? "No capture device mapped — install libpcap/Npcap." : "Passive decode from wire."),
             Feature("capture", "Packet capture", adapter.PcapName is null ? CapabilityLevel.Unavailable : CapabilityLevel.Supported,

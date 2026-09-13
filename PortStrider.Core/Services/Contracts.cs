@@ -3,6 +3,11 @@ using PortStrider.Core.Models;
 
 namespace PortStrider.Core.Services;
 
+public interface IWifiService
+{
+    Task<WifiScan> ScanAsync(AdapterInfo adapter, CancellationToken cancellationToken = default);
+}
+
 public interface IAdapterService
 {
     IReadOnlyList<AdapterInfo> ListAdapters(bool includeDown = true);

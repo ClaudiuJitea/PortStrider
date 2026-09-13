@@ -4,11 +4,17 @@ Cross-platform Ethernet field tester for Linux and Windows. PortStrider brings L
 
 Built with **Avalonia 11** and **.NET 8**. Layer 2 work uses **SharpPcap** and **PacketDotNet**.
 
+### What's new in v1.1
+
+- **WiFi spectrum analyzer** — channel-overlap graphics for 2.4 / 5 / 6 GHz, per-BSSID RSSI history, band filters, single and live scans, and nearby access-point details (Linux `iw` + Windows WLAN API)
+- **Cable diagnostics display** — visual link and port-media cards, four-pair TDR diagram with fault distances, and clear separation when TDR is not exposed by the driver
+- **Linux privilege inheritance** — child processes (`iw`, `ip`, `ethtool`, etc.) inherit network capabilities; pre-flight distinguishes saved grants that need a restart
+
 ---
 
 ## Download
 
-**[GitHub Releases](https://github.com/ClaudiuJitea/PortStrider/releases)** — pick the asset for your platform:
+**[GitHub Releases](https://github.com/ClaudiuJitea/PortStrider/releases)** — latest: **v1.1.0**. Pick the asset for your platform:
 
 | Platform | Release asset |
 | --- | --- |
@@ -39,6 +45,7 @@ On Linux, grant capture capabilities once after download (see [Linux capture pri
 | **Switch** | LLDP, CDP, and EDP decode; Voice VLAN from LLDP-MED / CDP; Flash Port blinks the switch LED by cycling the link |
 | **Reflector** | Swaps MAC (and optionally IP + ports) and re-injects — peer throughput with another tester or `iperf3 -u` |
 | **VLAN monitor** | Top nine VLANs by traffic share |
+| **WiFi spectrum analyzer** | 2.4 / 5 / 6 GHz channel-overlap graphics, per-BSSID RSSI history, band filters, single/live scans, and nearby access-point details |
 | **Capture** | Streaming PCAP with BPF filters, snap length, 2 GB cap |
 | **Tools** | Ping, traceroute, TCP port probe, HTTP/TLS, iperf3 client/server |
 | **Cable** | TDR via ethtool when the driver exposes it; SFP EEPROM/DDM when available |
@@ -65,7 +72,7 @@ chmod +x scripts/grant-caps.sh
 ./scripts/grant-caps.sh
 ```
 
-This applies `cap_net_raw`, `cap_net_admin`, and `cap_net_bind_service` (UDP/68 for DHCP) to the `PortStrider` binary. At startup PortStrider raises the first two capabilities into its ambient set so child processes (`ip`, `ethtool`, `wpa_supplicant`, `dhclient`) inherit them. If that fails, it falls back to passwordless `sudo -n` or `pkexec`.
+This applies `cap_net_raw`, `cap_net_admin`, and `cap_net_bind_service` (UDP/68 for DHCP) to the `PortStrider` binary. Restart after granting capabilities. PortStrider prepares the first two already-granted capabilities in the launching thread's inheritable and ambient sets so child processes (`iw`, `ip`, `ethtool`, `wpa_supplicant`, `dhclient`) inherit them. Network command helpers can fall back to passwordless `sudo -n` or `pkexec`; live WiFi scans report missing privileges without repeated password prompts. Pre-flight checks active network capabilities and inheritance, and distinguishes a saved grant that still needs a restart.
 
 For a downloaded standalone binary, point the script at that path or run:
 
@@ -82,8 +89,24 @@ sudo setcap cap_net_raw,cap_net_admin,cap_net_bind_service+eip ./PortStrider
 
 Pre-flight checks list missing dependencies. Common ones:
 
-- **Linux:** `ip`, `ethtool`, `wpa_supplicant`, `dhclient`, `iperf3`, `ping`, `traceroute`
+- **Linux:** `ip`, `ethtool`, `wpa_supplicant`, `dhclient`, `iperf3`, `ping`, `traceroute`, `iw` (WiFi scans)
 - **Windows:** `iperf3` (Npcap required for capture)
+
+### WiFi spectrum analyzer
+
+Select a WiFi adapter in the top toolbar and open **WiFi**. Choose a band and use **Scan once** or **Live scan**. The graph automatically fits the observed channel footprints. Scroll over it (or use +/−) to zoom, drag to pan, and use **Fit networks**, **Full band**, or **Focus selected** to adjust the view. Manual zoom is retained during live refresh. Click near a curve's signal level to inspect it; repeated clicks cycle coincident curves. You can also choose an SSID in the selector or access-point table. Colors match the curves, selector, and overlap list.
+
+**Select strongest** chooses the highest RSSI in the current band. The details panel shows signal rank, BSSID, security, primary channel/frequency, width, estimated footprint, overlapping APs, same-primary-channel peers, last-seen time, and historical signal minimum/maximum/average. Ranking describes received signal only, not speed or Internet quality; overlap describes frequency footprints, not measured airtime. History follows the selected BSSID across the last 60 scans, including gaps when it disappears. Live scans wait five seconds after each completed sweep; Stop, changing adapters, and leaving the page cancel monitoring.
+
+Pre-flight checks WiFi scan tools and adapter/radio availability. On Linux, repair **WiFi scan tools** to install `iw`; repair **Capture privileges** and restart the app to inherit CAP_NET_ADMIN for scanning. Enable WiFi and disable airplane mode. On Windows, scans use the native WLAN API and require WLAN AutoConfig, a working WiFi driver, and OS location access where required. Pre-flight reports failures with guidance; Npcap is not needed for this analyzer.
+
+The graphs visualize access-point scan results, not raw RF spectrum: they cannot measure non-WiFi interference, noise floor, or airtime utilization. Available bands depend on the adapter, driver, and regulatory domain. Curves use advertised HT/VHT operating widths when parsed on Linux; unknown widths (including Windows and non-contiguous 80+80 MHz) use a labeled 20 MHz guide. Windows security is shown as Open/Protected. Failed scans retain the last completed result and timestamp.
+
+### Cable diagnostics display
+
+The Cable page summarizes physical link state, negotiated speed/duplex, local and partner advertised maximum speeds, auto-negotiation, MDI-X, and port media in visual cards. When a driver exposes TDR results, a four-pair cable diagram and colored pair cards show pass/open/short/check state and estimated fault distance. When the link works but the selected NIC does not expose TDR, the page shows a healthy link separately from an amber **TDR not exposed** result instead of presenting the driver error as a cable fault. Raw `ethtool` output remains available in a collapsed technical-details section.
+
+Backend references: [Linux iw](https://wireless.docs.kernel.org/en/latest/en/users/documentation/iw.html), [Windows WLAN BSS API](https://learn.microsoft.com/en-us/windows/win32/api/wlanapi/nf-wlanapi-wlangetnetworkbsslist).
 
 ---
 
@@ -140,6 +163,7 @@ PortStrider.sln
 | Wiremap / tone | No | No | Requires dedicated hardware |
 | SFP diagnostics | Degraded | No | `ethtool -m` when exposed |
 | Packet capture | Yes | Yes | Streams to PCAP |
+| WiFi channel / signal analyzer | Yes | Yes | WiFi adapter required; Linux iw + CAP_NET_ADMIN; Windows native WLAN; scan data, not raw RF spectrum |
 | iperf3 throughput | Yes | Yes | External binary |
 | Local reports / bundles | Yes | Yes | No cloud dependency |
 

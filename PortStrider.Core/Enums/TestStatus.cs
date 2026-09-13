@@ -23,7 +23,8 @@ public enum AppSection
     Profiles,
     VlanMonitor,
     Capabilities,
-    PreFlight
+    PreFlight,
+    Wifi
 }
 
 public enum DiscoveryProtocol

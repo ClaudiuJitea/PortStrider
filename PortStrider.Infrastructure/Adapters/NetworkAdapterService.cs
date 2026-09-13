@@ -21,7 +21,7 @@ public sealed class NetworkAdapterService : IAdapterService
             if (ni.NetworkInterfaceType is NetworkInterfaceType.Loopback && !includeDown)
                 continue;
 
-            var media = Classify(ni);
+            var media = AdapterMediaClassifier.Classify(ni);
             if (media == LinkMediaKind.Loopback)
                 continue;
 
@@ -212,21 +212,6 @@ public sealed class NetworkAdapterService : IAdapterService
         }
         return [];
     }
-
-    private static LinkMediaKind Classify(NetworkInterface ni) => ni.NetworkInterfaceType switch
-    {
-        NetworkInterfaceType.Loopback => LinkMediaKind.Loopback,
-        NetworkInterfaceType.Wireless80211 => LinkMediaKind.WiFi,
-        NetworkInterfaceType.Ethernet or NetworkInterfaceType.GigabitEthernet or NetworkInterfaceType.FastEthernetFx
-            or NetworkInterfaceType.FastEthernetT or NetworkInterfaceType.Ethernet3Megabit => LinkMediaKind.Ethernet,
-        NetworkInterfaceType.Tunnel or NetworkInterfaceType.Ppp => LinkMediaKind.Virtual,
-        _ => ni.Description.Contains("virtual", StringComparison.OrdinalIgnoreCase)
-             || ni.Name.StartsWith("br", StringComparison.OrdinalIgnoreCase)
-             || ni.Name.StartsWith("docker", StringComparison.OrdinalIgnoreCase)
-             || ni.Name.StartsWith("veth", StringComparison.OrdinalIgnoreCase)
-            ? LinkMediaKind.Virtual
-            : LinkMediaKind.Other
-    };
 
     private static OperationalStatusKind MapStatus(OperationalStatus status) => status switch
     {
