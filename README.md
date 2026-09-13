@@ -12,6 +12,20 @@ Built with **Avalonia 11** and **.NET 8**. Layer 2 work uses **SharpPcap** and *
 
 ---
 
+## Screenshots
+
+| AutoTest | WiFi analyzer |
+| --- | --- |
+| [![AutoTest profile-driven run with switch neighbor summary](docs/screenshots/01-autotest.png)](docs/screenshots/01-autotest.png) | [![WiFi channel overlap and RSSI history](docs/screenshots/02-wifi.png)](docs/screenshots/02-wifi.png) |
+| Profile-driven link, DHCP, VLAN, gateway, DNS, and target checks with live switch discovery | 2.4 / 5 / 6 GHz overlap graph, band filters, live scans, and per-BSSID signal history |
+
+| Cable diagnostics | Switch discovery |
+| --- | --- |
+| [![Cable TDR diagram and PHY summary cards](docs/screenshots/03-cable.png)](docs/screenshots/03-cable.png) | [![LLDP switch port discovery and flash port](docs/screenshots/04-switch.png)](docs/screenshots/04-switch.png) |
+| Visual link state, negotiated speed, four-pair TDR, and fault distance when the driver exposes it | LLDP / CDP / EDP decode, voice VLAN, PoE, and flash-port LED identification |
+
+---
+
 ## Download
 
 **[GitHub Releases](https://github.com/ClaudiuJitea/PortStrider/releases)** — latest: **v1.1.0**. Pick the asset for your platform:
